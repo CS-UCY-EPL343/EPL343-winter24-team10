@@ -13,6 +13,7 @@ templates = Jinja2Templates(directory="/app/frontend/templates")
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "title": 'INDEX.HTML'})
 
+
 @app.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
