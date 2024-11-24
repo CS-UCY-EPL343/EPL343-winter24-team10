@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HF MARKETS</title>
+    <style>
+        /* Basic styling for the dropdowns to align them side by side */
+        .dropdown-container {
+            display: flex;
+            gap: 20px; /* Space between dropdowns */
+            margin-bottom: 20px; /* Space below the dropdowns */
+        }
+
+        .selection-group {
+            display: flex; /* Align the groups side by side */
+            gap: 50px; /* Space between the two selection groups */
+            margin-bottom: 20px; /* Space below the selection groups */
+        }
+    </style>
+    <script>
+        function showSelection(selectId) {
+            const currencySelect = document.getElementById(`${selectId}CurrencySelect`);
+            const cryptoSelect = document.getElementById(`${selectId}CryptoSelect`);
+            const selection = document.querySelector(`input[name="${selectId}_type"]:checked`).value;
+
+            if (selection === "currency") {
+                currencySelect.style.display = "flex";
+                cryptoSelect.style.display = "none";
+            } else {
+                currencySelect.style.display = "none";
+                cryptoSelect.style.display = "flex";
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Select Currencies and Cryptocurrencies</h1>
+    <form action="/dashboard" method="post">
+
+        <!-- Selection Group for the First Dropdown -->
+        <div class="selection-group">
+            <div>
+                <label>
+                    <input type="radio" name="first_type" value="currency" onclick="showSelection('first')" checked>
+                    Currency
+                </label>
+                <label>
+                    <input type="radio" name="first_type" value="crypto" onclick="showSelection('first')">
+                    Cryptocurrency
+                </label>
+
+                <!-- First Dropdowns -->
+                <div id="firstCurrencySelect" class="dropdown-container">
+                    <div>
+                        <label for="currency1">Choose a currency:</label>
+                        <select id="currency1" name="currency1">
+                            <!-- Major Currencies from HotForex -->
+                            <option value="USD">US Dollar (USD)</option>
+                            <option value="EUR">Euro (EUR)</option>
+                            <option value="GBP">British Pound (GBP)</option>
+                            <option value="JPY">Japanese Yen (JPY)</option>
+                            <option value="AUD">Australian Dollar (AUD)</option>
+                            <option value="CAD">Canadian Dollar (CAD)</option>
+                            <option value="CHF">Swiss Franc (CHF)</option>
+                            <option value="NZD">New Zealand Dollar (NZD)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="firstCryptoSelect" class="dropdown-container" style="display: none;">
+                    <div>
+                        <label for="crypto1">Choose a cryptocurrency:</label>
+                        <select id="crypto1" name="crypto1">
+                            <!-- Major Cryptocurrencies -->
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="XRP">Ripple (XRP)</option>
+                            <option value="LTC">Litecoin (LTC)</option>
+                            <option value="BCH">Bitcoin Cash (BCH)</option>
+                            <option value="ADA">Cardano (ADA)</option>
+                            <option value="DOT">Polkadot (DOT)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selection Group for the Second Dropdown -->
+            <div>
+                <label>
+                    <input type="radio" name="second_type" value="currency" onclick="showSelection('second')" checked>
+                    Currency
+                </label>
+                <label>
+                    <input type="radio" name="second_type" value="crypto" onclick="showSelection('second')">
+                    Cryptocurrency
+                </label>
+
+                <!-- Second Dropdowns -->
+                <div id="secondCurrencySelect" class="dropdown-container">
+                    <div>
+                        <label for="currency2">Choose a currency:</label>
+                        <select id="currency2" name="currency2">
+                            <!-- Major Currencies from HotForex -->
+                            <option value="USD">US Dollar (USD)</option>
+                            <option value="EUR">Euro (EUR)</option>
+                            <option value="GBP">British Pound (GBP)</option>
+                            <option value="JPY">Japanese Yen (JPY)</option>
+                            <option value="AUD">Australian Dollar (AUD)</option>
+                            <option value="CAD">Canadian Dollar (CAD)</option>
+                            <option value="CHF">Swiss Franc (CHF)</option>
+                            <option value="NZD">New Zealand Dollar (NZD)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="secondCryptoSelect" class="dropdown-container" style="display: none;">
+                    <div>
+                        <label for="crypto2">Choose a cryptocurrency:</label>
+                        <select id="crypto2" name="crypto2">
+                            <!-- Major Cryptocurrencies -->
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="XRP">Ripple (XRP)</option>
+                            <option value="LTC">Litecoin (LTC)</option>
+                            <option value="BCH">Bitcoin Cash (BCH)</option>
+                            <option value="ADA">Cardano (ADA)</option>
+                            <option value="DOT">Polkadot (DOT)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        // Ensure both currency and crypto selects are hidden initially
+        document.getElementById("firstCryptoSelect").style.display = "none";
+        document.getElementById("secondCryptoSelect").style.display = "none";
+
+        // Show/hide dropdowns based on the initial selection
+        showSelection('first');
+        showSelection('second');
+    </script>
+</body>
+</html>

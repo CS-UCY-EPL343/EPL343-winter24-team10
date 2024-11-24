@@ -8,5 +8,6 @@ services:
     volumes:
       - ../backend:/app/backend
       - ../frontend:/app/frontend 
+      - ../.env:/app/.env
     ports:
       - "8000:8000"
