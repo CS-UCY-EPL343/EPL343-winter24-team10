@@ -1,4 +1,3 @@
-/* General Body Styles */
 body {
     background-color: #f5f5f5; /* Light gray background */
     font-family: Arial, sans-serif;
@@ -9,7 +8,6 @@ body {
     flex-direction: column;
 }
 
-/* Header Styles */
 #kt_header {
     background-color: #000; /* Black background */
     color: white; /* Text in the header */
@@ -33,7 +31,6 @@ body {
     height: 50px; /* Adjust the logo size */
 }
 
-/* Main Content Wrapper */
 .wrapper {
     margin: auto; /* Center the registration box */
     max-width: 400px; /* Limit the registration box width */
@@ -45,14 +42,13 @@ body {
     align-items: center; /* Ensure the registration box content is centered */
 }
 
-/* Form Card Styles */
 .card {
     background-color: #fff;
     border: 1px solid #ebebeb;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     padding: 30px;
-    width: 100%; /* Ensure the card spans full width of the wrapper */
+    width: 100%; 
 }
 
 .card-header {
@@ -76,7 +72,7 @@ body {
 .card-body input[type="text"],
 .card-body input[type="email"],
 .card-body input[type="password"] {
-    width: 100%; /* Full width to match button */
+    width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -84,19 +80,18 @@ body {
     box-sizing: border-box;
 }
 
-/* Eye Icon for Password Toggle */
 .input-icon {
-    position: relative; /* Enable positioning for the eye icon */
+    position: relative; 
 }
 
 .input-icon input {
-    padding-right: 40px; /* Add space for the eye icon */
+    padding-right: 40px;
 }
 
 .toggle-password {
     position: absolute;
-    top: 50%; /* Vertically align */
-    right: 10px; /* Place near the right edge */
+    top: 50%;
+    right: 10px; 
     transform: translateY(-50%);
     font-size: 18px;
     color: #666;
@@ -107,16 +102,15 @@ body {
     color: #333;
 }
 
-/* Submit Button */
 button[name="register"] {
-    background-color: #28a745; /* Green button */
+    background-color: #28a745; 
     color: white;
     border: none;
     border-radius: 4px;
     padding: 10px;
     cursor: pointer;
     font-size: 16px;
-    width: 100%; /* Match the width of input fields */
+    width: 100%; 
     margin-top: 10px;
 }
 
@@ -124,7 +118,6 @@ button[name="register"]:hover {
     background-color: #218838;
 }
 
-/* Footer Link */
 .card-footer {
     margin-top: 20px;
     text-align: center;

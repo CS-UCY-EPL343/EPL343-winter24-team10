@@ -253,7 +253,7 @@
                                         <input type="email" id="email" name="email" placeholder="Email" class="form-control required-field" required>
                                        
                                         {% if Error_Message %}
-                                        <b style="color: red;">{{ Error_Message }}</b>
+                                        <b style="color: red; font-size: 12px;">{{ Error_Message }}</b>
                                         {% endif %}
                                     </div>
                                     
@@ -261,7 +261,10 @@
                                         <label for="password"><b>Password</b></label>
                                         <div class="input-icon">
                                             <input type="password" name="password" id="password" placeholder="Password" class="form-control pl-4 required-field" autocomplete="off" required>
-                                            <span id="togglePassword" class="toggle-password">👁️</span>
+                                            <span class="eye-icon" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                                                <img src="/pictures/eye-regular.svg" id="eyeOpen" alt="Show Password" style="width: 20px; display: block;">
+                                                <img src="/pictures/eye-slash-regular.svg" id="eyeClosed" alt="Hide Password" style="width: 20px; display: none;">                                                
+                                            </span>
                                         </div>
                                         <span id="passwordError" class="error-message"></span>
                                     </div>
@@ -272,11 +275,11 @@
                                 </form>
                             </div>
                             <div class="card-footer d-flex justify-content-between border-0 pt-4">
-                                <h6 class="m-0">Already have an account?
-                                    <!-- PAPAKOSTAS -->
-                                    <a href="https://register.hfm.com/sv/en/new-live-account" target="_blank" class="text-bold"><b>Login Here</b></a>
-                                    <!-- STEPHANOS -->
-                                </h6>
+                                <div class="card-footer d-flex justify-content-between border-0 pt-4">
+                                    <h6 class="m-0">Already have an account?
+                                        <a href="/login" target="_blank" class="text-bold"><b>Sign In Here</b></a>
+                                        <!-- STEPHANOS -->
+                                    </h6>
                             </div>
                         </div>
                     </div>
@@ -286,13 +289,20 @@
     </div>
 
     <script>
-        document.getElementById("togglePassword").addEventListener("click", function () {
-            const passwordField = document.getElementById("password");
-            const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
-            passwordField.setAttribute("type", type);
-            this.textContent = type === "password" ? "👁️" : "🔒";
+        const passwordField = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeOpen = document.getElementById('eyeOpen');
+        const eyeClosed = document.getElementById('eyeClosed');
+
+        togglePassword.addEventListener('click', function () {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            eyeOpen.style.display = type === 'password' ? 'block' : 'none';
+            eyeClosed.style.display = type === 'password' ? 'none' : 'block';
         });
+
     </script>
+
     <script>
         document.getElementById("registrationForm").addEventListener("submit", function (event) {
             const password = document.getElementById("password").value;
