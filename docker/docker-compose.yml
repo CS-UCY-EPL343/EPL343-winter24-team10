@@ -1,3 +1,4 @@
+version: "3.8"
 services:
   backend:
     build:
@@ -7,7 +8,30 @@ services:
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ../backend:/app/backend
-      - ../frontend:/app/frontend 
-      - ../.env:/app/.env
+      - ../frontend:/app/frontend
     ports:
       - "8000:8000"
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: myuser
+      DB_PASSWORD: mypassword
+      DB_NAME: mydatabase
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: mydatabase
+      MARIADB_USER: myuser
+      MARIADB_PASSWORD: mypassword
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  mariadb_data:

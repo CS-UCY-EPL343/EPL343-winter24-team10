@@ -3,6 +3,8 @@ uvicorn
 jinja2
 requests
 redis
-
-python-multipart
+sqlalchemy
 python-dotenv
+mysql-connector-python
+mariadb
+python-multipart

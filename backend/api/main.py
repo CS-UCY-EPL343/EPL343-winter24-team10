@@ -1,9 +1,10 @@
-import requests
-import logging
 import os
+import logging
+import mysql.connector
 from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,114 +14,63 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+app.mount("/static", StaticFiles(directory="/app/frontend/static"), name="static")
+
+app.mount("/pictures", StaticFiles(directory="/app/frontend/pictures"), name="pictures")
+
+
 templates = Jinja2Templates(directory="/app/frontend/templates")
 
-MAJOR_CURRENCIES = {
-    "USD": "US Dollar",
-    "EUR": "Euro",
-    "GBP": "British Pound",
-    "JPY": "Japanese Yen",
-    "AUD": "Australian Dollar",
-    "CAD": "Canadian Dollar",
-    "CHF": "Swiss Franc",
-    "NZD": "New Zealand Dollar",
-}
+DB_HOST = os.getenv("DB_HOST", "mariadb")
+DB_PORT = os.getenv("DB_PORT", 3306)
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "rootpassword")
+DB_NAME = os.getenv("DB_NAME", "mydatabase")
 
-MAJOR_CRYPTOCURRENCIES = {
-    "BTC": "Bitcoin",
-    "ETH": "Ethereum",
-    "XRP": "Ripple",
-    "LTC": "Litecoin",
-    "BCH": "Bitcoin Cash",
-    "ADA": "Cardano",
-    "DOT": "Polkadot",
-}
-
-OPEN_EXCHANGE_API_URL = "https://openexchangerates.org/api"
-API_KEY = os.getenv("OPEN_EXCHANGE_API_KEY")
-
-
-def get_available_currencies():
-    """Return a combined list of available currencies and cryptocurrencies."""
-    return {**MAJOR_CURRENCIES, **MAJOR_CRYPTOCURRENCIES}
-
-
-async def fetch_exchange_rate(base_currency: str, target_currency: str):
-    """Fetch the exchange rate for the given currency pair from the Open Exchange Rates API."""
-    try:
-        if not API_KEY:
-            raise ValueError("API Key is not set.")
-
-        if base_currency == target_currency:
-            return 1.0  # No conversion needed, return 1
-
-        rate_response = requests.get(
-            f"{OPEN_EXCHANGE_API_URL}/convert/{base_currency}/{target_currency}?app_id={API_KEY}"
-        )
-        rate_response.raise_for_status()
-        rate_data = rate_response.json()
-
-        return rate_data.get("rate", None)
-
-    except requests.RequestException as e:
-        logger.error(f"Error fetching exchange rate: {e}")
-        return None
-
+def get_db_connection():
+    return mysql.connector.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        charset='utf8mb4',
+        collation='utf8mb4_general_ci'
+    )
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     """Render the index page."""
     return templates.TemplateResponse("index.html", {"request": request})
 
-
-@app.get("/login", response_class=HTMLResponse)
-async def login(request: Request):
-    """Render the login page."""
-    return templates.TemplateResponse("login.html", {"request": request})
-
-
 @app.get("/register", response_class=HTMLResponse)
 async def register(request: Request):
     """Render the registration page."""
     return templates.TemplateResponse("register.html", {"request": request})
 
+@app.post("/register")
+async def register_user(request: Request, name: str = Form(...), surname: str = Form(...), 
+                         email: str = Form(...), password: str = Form(...)):
+    """Register a new user with the given email, username, first name, and last name."""
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request):
-    """Render the dashboard with available currencies."""
-    currencies = get_available_currencies()
-    return templates.TemplateResponse(
-        "dashboard.html", {"request": request, "currencies": currencies}
-    )
+    try:
+        # Insert the user details into the 'users' table
+        cursor.execute(
+            "INSERT INTO USER (Email, Password, Username) VALUES (%s, %s, %s)", 
+            (email, password, name)
+        )
+        conn.commit()
+        logger.info(f"User {name} with email {name} registered successfully.")
+        return HTMLResponse(content=f"User {name} with email {name} registered successfully.", status_code=200)
 
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error registering user: {e}")
+        return templates.TemplateResponse("register.html", {"request": request, "Error_Message": 'Email Already Exists'})
 
-@app.post("/dashboard", response_class=HTMLResponse)
-async def process_selection(
-    request: Request,
-    currency1: str = Form(...),
-    currency2: str = Form(...),
-    crypto1: str = Form(...),
-    crypto2: str = Form(...),
-):
-    """Process the currency and crypto selections and fetch the exchange rate."""
-    currencies = get_available_currencies()
-
-    currency_rate = await fetch_exchange_rate(currency1, currency2)
-    crypto_rate = await fetch_exchange_rate(crypto1, crypto2)  # Adjust as needed
-
-    if currency_rate is None or crypto_rate is None:
-        raise HTTPException(status_code=500, detail="Error fetching exchange rates")
-
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "currencies": currencies,
-            "currency1": currency1,
-            "currency2": currency2,
-            "crypto1": crypto1,
-            "crypto2": crypto2,
-            "currency_rate": currency_rate,
-            "crypto_rate": crypto_rate,
-        },
-    )
+    finally:
+        cursor.close()
+        conn.close()
