@@ -57,7 +57,6 @@ async def register_user(request: Request, name: str = Form(...), surname: str = 
     cursor = conn.cursor()
 
     try:
-        # Insert the user details into the 'users' table
         cursor.execute(
             "INSERT INTO USER (Email, Password, Username) VALUES (%s, %s, %s)", 
             (email, password, name)
@@ -70,6 +69,41 @@ async def register_user(request: Request, name: str = Form(...), surname: str = 
         conn.rollback()
         logger.error(f"Error registering user: {e}")
         return templates.TemplateResponse("register.html", {"request": request, "Error_Message": 'Email Already Exists'})
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.get("/login", response_class=HTMLResponse)
+async def register(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.post("/login")
+async def login_user(request: Request, email: str = Form(...), password: str = Form(...)):
+    """Check if the user exists and validate the password."""
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT Password FROM USER WHERE Email = %s", (email,))
+        result = cursor.fetchone()
+
+        if result:
+            stored_password = result[0]
+            
+            if stored_password == password:
+                logger.info(f"User with email {email} logged in successfully.")
+                return HTMLResponse(content=f"User {email} logged in successfully.", status_code=200)
+            else:
+                return templates.TemplateResponse("login.html", {"request": request, "Error_Message": "Incorrect Email or Password"})
+        else:
+            return templates.TemplateResponse("login.html", {"request": request, "Error_Message": "Incorrect Email or Password"})
+
+    except Exception as e:
+        logger.error(f"Error during login: {e}")
+        return templates.TemplateResponse("login.html", {"request": request, "Error_Message": "An error occurred during login"})
 
     finally:
         cursor.close()
