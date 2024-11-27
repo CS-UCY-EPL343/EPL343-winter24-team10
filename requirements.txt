@@ -1,3 +1,10 @@
 fastapi
 uvicorn
 jinja2
+requests
+redis
+sqlalchemy
+python-dotenv
+mysql-connector-python
+mariadb
+python-multipart

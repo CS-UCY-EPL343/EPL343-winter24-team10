@@ -1,0 +1,179 @@
+/* General Body Styles */
+body {
+    background-color: whitesmoke; /* Light gray background */
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Styles */
+#kt_header {
+    background-color: black; /* Black background */
+    color: white; /* Text in the header */
+    height: 80px; /* Fixed header height */
+    display: flex;
+    align-items: center;
+    padding: 0 21px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Full width */
+    position: fixed; /* Sticks the header to the top */
+    top: 0;
+    left: 0;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo img {
+    height: 50px; /* Adjust the logo size */
+}
+
+/* Main Content Wrapper */
+.wrapper {
+    margin: auto; /* Center the login box */
+    max-width: 400px; /* Limit the login box width */
+    padding: 25px;
+    box-sizing: border-box;
+    margin-top: 120px; /* Push the login box further down */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Ensure the login box content is centered */
+}
+
+/* Form Card Styles */
+.card {
+    background-color: white;
+    border: 1px solid whitesmoke;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 100%; /* Ensure the card spans full width of the wrapper */
+}
+
+.card-header {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center; /* Center the title */
+}
+
+.card-body .form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.card-body .form-group label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.card-body input[type="email"],
+.card-body input[type="password"] {
+    width: 100%; /* Full width to match button */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* Submit Button */
+button[name="login"] {
+    background-color: green; /* Green button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%; /* Match the width of input fields */
+    margin-top: 10px;
+}
+
+button[name="login"]:hover {
+    background-color: green;
+}
+
+/* Footer Link */
+.card-footer {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.card-footer a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.card-footer a:hover {
+    text-decoration: underline;
+}
+
+label {
+    position: relative;
+}
+
+label a {
+    position: absolute;
+    right: 0; /* Move it to the far-right of the container */
+    font-size: 12px; /* Smaller font size */
+    text-decoration: none; /* No underline */
+    color: red; /* Red color */
+}
+
+/* Hover effect: underline when the mouse hovers over the link */
+label a:hover {
+    text-decoration: underline; /* Underline when hovered */
+}
+
+/* Ensure the email and password fields have the same width and padding */
+.form-control {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Add extra padding to the password field for the eye icon */
+/* Updated password container and eye icon styles */
+.password-container {
+    position: relative;
+    max-width: 100%; /* Ensures it does not exceed the parent container */
+}
+
+.password-container input {
+    padding-right: 40px; /* Space for the eye icon */
+    width: 100%; /* Ensure input spans full width */
+    box-sizing: border-box; /* Prevent size overflow due to padding */
+}
+
+.eye-icon {
+    position: absolute;
+    right: 10px; /* Positioning the eye icon inside the input field */
+    top: 50%; /* Vertically align the icon */
+    transform: translateY(-50%);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; /* Set fixed dimensions */
+    height: 20px;
+}
+
+
+/* Remove outline from buttons and focus */
+input:focus {
+    outline: none;
+    border: 1px solid #007bff;
+}
+
+
