@@ -40,7 +40,7 @@ OPEN_EXCHANGE_RATES_API_KEY = os.getenv("OPEN_EXCHANGE_RATES_API_KEY")
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-ALPHA_VANTAGE_API_KEY = 'Z9PPR7T1ICWXAP1P'
+ALPHA_VANTAGE_API_KEY = '5QTUO2E4BAR9SZV3'
 ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 
 # Utility Functions
@@ -141,7 +141,7 @@ async def dashboard(request: Request):
 async def dashboard(request: Request, currency2: str = Form(...)):
     
     currency1 = "USD" 
-    start_date = "2020-12-01" 
+    start_date = "2014-11-07" 
     end_date = datetime.today()
 
     # Fetch forex data for the selected currencies and date range
@@ -176,58 +176,67 @@ async def forgot_password_post(request: Request, password: str = Form(...), pass
 
 @app.post("/fill_database", response_class=HTMLResponse)
 async def fill_database(request: Request):
-    """Fill the database with data from Alpha Vantage API."""
-    # Define the list of currency pairs (USD as the baseline)
+    """Fill the database with forex data from Alpha Vantage API."""
     currency_pairs = ["USD/EUR", "USD/GBP", "USD/JPY", "USD/AUD", "USD/CAD", "USD/CHF", "USD/NZD"]
 
-    # Function to fetch forex data from Alpha Vantage API
+    # Iterate over currency pairs to fetch data
     for pair in currency_pairs:
+        base_currency, target_currency = pair.split('/')
         params = {
             "function": "FX_DAILY",
-            "from_symbol": pair.split('/')[0],
-            "to_symbol": pair.split('/')[1],
+            "from_symbol": base_currency,
+            "to_symbol": target_currency,
             "apikey": ALPHA_VANTAGE_API_KEY,
-            "outputsize": "full",  # 'full' will give all available data
+            "outputsize": "full",
             "datatype": "json"
         }
-        
-        response = requests.get(ALPHA_VANTAGE_URL, params=params)
-        
-        if response.status_code == 200:
+
+        # Fetch data from Alpha Vantage API
+        try:
+            response = requests.get(ALPHA_VANTAGE_URL, params=params)
+            response.raise_for_status()
             forex_data = response.json()
-            if "Time Series FX (Daily)" in forex_data:
-                data = forex_data["Time Series FX (Daily)"]
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching data for {pair}: {e}")
+            continue
 
-                # Establish DB connection to insert data
-                conn = get_db_connection()
-                cursor = conn.cursor()
+        # Process the response
+        time_series = forex_data.get("Time Series FX (Daily)")
+        if not time_series:
+            logger.error(f"No time series data available for {pair}. Response: {forex_data}")
+            continue
+
+        # Insert data into the database
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            for date, values in time_series.items():
                 try:
-                    # Loop through the forex data and insert it into the database
-                    for date, values in data.items():
-                        cursor.execute("""
-                            INSERT INTO STOCK (stock_name, date, open_price, high_price, low_price, close_price, value)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
-                        """, (
-                            pair,
-                            date,
-                            values["1. open"],
-                            values["2. high"],
-                            values["3. low"],
-                            values["4. close"],
-                            values["5. volume"]  # Assuming 'value' is the volume
-                        ))
-                    conn.commit()
-                    logger.info(f"Forex data for {pair} inserted successfully.")
+                    cursor.execute("""
+                        INSERT INTO STOCK (stock_name, date, open_price, high_price, low_price, close_price, value)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        pair,
+                        date,
+                        float(values["1. open"]),
+                        float(values["2. high"]),
+                        float(values["3. low"]),
+                        float(values["4. close"]),
+                        float(values.get("5. volume", 1))  # Default to 0 if 'volume' is missing
+                    ))
                 except Exception as e:
-                    conn.rollback()
-                    logger.error(f"Error inserting data for {pair}: {e}")
-                finally:
-                    cursor.close()
-                    conn.close()
-            else:
-                logger.error(f"No data found for {pair}")
-        else:
-            logger.error(f"Failed to fetch data for {pair}: {response.status_code}")
+                    logger.error(f"Failed to insert data for {pair} on {date}: {e}")
+                    continue
 
-    # Return a message after filling the database
-    return HTMLResponse(content="Database successfully filled with forex data!")
+            conn.commit()
+            logger.info(f"Forex data for {pair} inserted successfully.")
+        except Exception as e:
+            logger.error(f"Database error while processing {pair}: {e}")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    return HTMLResponse(content="Database successfully filled with forex data!\n")
