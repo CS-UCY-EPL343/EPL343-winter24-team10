@@ -6,11 +6,12 @@ from dotenv import load_dotenv
 from passlib.context import CryptContext
 from api.jwt_auth import create_access_token
 from api.dashboard import fetch_forex_data, plot_forex_data
+from datetime import timedelta
 
 import os
 import logging
+import requests
 import mysql.connector
-from datetime import timedelta
 
 load_dotenv()
 
@@ -39,6 +40,8 @@ OPEN_EXCHANGE_RATES_API_KEY = os.getenv("OPEN_EXCHANGE_RATES_API_KEY")
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+ALPHA_VANTAGE_API_KEY = 'Z9PPR7T1ICWXAP1P'
+ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 
 # Utility Functions
 def get_db_connection():
@@ -171,6 +174,60 @@ async def forgot_password_post(request: Request, password: str = Form(...), pass
     return templates.TemplateResponse("password_changed.html", {"request": request})
 
 
-# @app.post("/fill_database", response_class=HTMLResponse)
-# async def fill_database():
-    
+@app.post("/fill_database", response_class=HTMLResponse)
+async def fill_database(request: Request):
+    """Fill the database with data from Alpha Vantage API."""
+    # Define the list of currency pairs (USD as the baseline)
+    currency_pairs = ["USD/EUR", "USD/GBP", "USD/JPY", "USD/AUD", "USD/CAD", "USD/CHF", "USD/NZD"]
+
+    # Function to fetch forex data from Alpha Vantage API
+    for pair in currency_pairs:
+        params = {
+            "function": "FX_DAILY",
+            "from_symbol": pair.split('/')[0],
+            "to_symbol": pair.split('/')[1],
+            "apikey": ALPHA_VANTAGE_API_KEY,
+            "outputsize": "full",  # 'full' will give all available data
+            "datatype": "json"
+        }
+        
+        response = requests.get(ALPHA_VANTAGE_URL, params=params)
+        
+        if response.status_code == 200:
+            forex_data = response.json()
+            if "Time Series FX (Daily)" in forex_data:
+                data = forex_data["Time Series FX (Daily)"]
+
+                # Establish DB connection to insert data
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                try:
+                    # Loop through the forex data and insert it into the database
+                    for date, values in data.items():
+                        cursor.execute("""
+                            INSERT INTO STOCK (stock_name, date, open_price, high_price, low_price, close_price, value)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (
+                            pair,
+                            date,
+                            values["1. open"],
+                            values["2. high"],
+                            values["3. low"],
+                            values["4. close"],
+                            values["5. volume"]  # Assuming 'value' is the volume
+                        ))
+                    conn.commit()
+                    logger.info(f"Forex data for {pair} inserted successfully.")
+                except Exception as e:
+                    conn.rollback()
+                    logger.error(f"Error inserting data for {pair}: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
+            else:
+                logger.error(f"No data found for {pair}")
+        else:
+            logger.error(f"Failed to fetch data for {pair}: {response.status_code}")
+
+    # Return a message after filling the database
+    return HTMLResponse(content="Database successfully filled with forex data!")
