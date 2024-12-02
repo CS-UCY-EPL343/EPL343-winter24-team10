@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ currency.upper() }} News</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #f0f0f0;
+            padding: 30px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 30px;
+            color: #00ff7f;
+            text-align: center;
+        }
+
+        .currency-select {
+            margin-bottom: 30px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .currency-select form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .currency-select select {
+            font-size: 1.1rem;
+            padding: 10px;
+            background-color: #1e1e1e;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .currency-select label {
+            font-size: 1rem;
+            color: #f0f0f0;
+        }
+
+        .news-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: #1e1e1e;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .news-container ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .news-container li {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .news-container li:last-child {
+            border-bottom: none;
+        }
+
+        .news-container a {
+            color: #00ff7f;
+            text-decoration: none;
+            font-size: 1.4rem;
+        }
+
+        .news-container a:hover {
+            color: #009e60;
+        }
+
+        .news-container p {
+            color: #ccc;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .article-row {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .article-details {
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .article-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff7f;
+            transition: color 0.3s ease;
+        }
+
+        .article-title:hover {
+            color: #009e60;
+        }
+
+        .article-description {
+            font-size: 1.1rem;
+            color: #ccc;
+            margin-top: 10px;
+        }
+
+        .article-published {
+            font-size: 0.9rem;
+            color: #bbb;
+            margin-top: 10px;
+        }
+
+        .article-link {
+            font-size: 1.1rem;
+            color: #00ff7f;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .article-link:hover {
+            color: #009e60;
+        }
+
+        .article-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .article-image-container {
+            flex-basis: 250px;
+            max-width: 100%;
+        }
+
+        .back-button {
+            display: inline-block;
+            background-color: #00ff7f;
+            color: #000;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 30px;
+            text-align: center;
+            width: 100%;
+            max-width: 200px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #009e60;
+        }
+
+        /* Flexbox adjustments for placing image on the left */
+        .article-row .article-image-container {
+            order: 0;  /* Image comes first */
+        }
+
+        .article-row .article-details {
+            order: 1; /* Text comes second */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Latest News for {{ currency.upper() }}</h1>
+
+    <div class="currency-select">
+        <form action="/news" method="get">
+            <label for="currency">Select Currency:</label>
+            <select name="currency" id="currency" onchange="this.form.submit()">
+                <option value="USD" {% if currency == 'USD' %}selected{% endif %}>USD</option>
+                <option value="EUR" {% if currency == 'EUR' %}selected{% endif %}>EUR</option>
+                <option value="GBP" {% if currency == 'GBP' %}selected{% endif %}>GBP</option>
+                <option value="JPY" {% if currency == 'JPY' %}selected{% endif %}>JPY</option>
+                <option value="AED" {% if currency == 'AED' %}selected{% endif %}>AED</option>
+                <option value="AUD" {% if currency == 'AUD' %}selected{% endif %}>AUD</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="news-container">
+        <ul>
+            {% for article in news_articles %}
+                <li>
+                    <div class="article-row">
+                        <div class="article-image-container">
+                            {% if article.url_to_image %}
+                                <img src="{{ article.url_to_image }}" alt="{{ article.title }}" class="article-image">
+                            {% endif %}
+                        </div>
+
+                        <div class="article-details">
+                            <a href="{{ article.url }}" target="_blank" class="article-title">
+                                {{ article.title }}
+                            </a>
+                            <p class="article-description">{{ article.description }}</p>
+                            <p class="article-published"><em>Published at: {{ article.published_at }}</em></p>
+                            <a href="{{ article.url }}" target="_blank" class="article-link">Read more</a>
+                        </div>
+                    </div>
+                </li>
+            {% else %}
+                <p>No news articles found for the selected currency.</p>
+            {% endfor %}
+        </ul>
+
+        <a href="/dashboard" class="back-button">Back to Dashboard</a>
+    </div>
+</body>
+</html>
