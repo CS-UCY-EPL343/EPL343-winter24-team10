@@ -3,9 +3,9 @@ uvicorn
 jinja2
 requests
 redis
-sqlalchemy
+sqlalchemy==2.0.36
 python-dotenv
-mysql-connector-python
+mysql-connector-python==8.4.0
 mariadb
 python-multipart
 pyjwt
@@ -14,5 +14,5 @@ passlib
 matplotlib
 plotly
 pyotp
-qrcode[pil]
-plotly
+nano
+pandas

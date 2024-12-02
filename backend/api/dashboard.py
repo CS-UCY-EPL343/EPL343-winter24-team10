@@ -1,82 +1,109 @@
 import requests
-import plotly.graph_objects as go
 import logging
+import mysql.connector
+import os
 from datetime import datetime, timedelta
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+import plotly.graph_objects as go
+import plotly.express as px
+import json
 
-# Set up logging (for debugging purposes)
+# Initialize FastAPI app and templates
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+# Set up logging for debugging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Database connection function using environment variables
+def get_db_connection():
+    """
+    Establish and return a database connection using environment variables.
+    """
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            port=os.getenv("DB_PORT", 3306),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        logger.info("Successfully connected to the database.")
+        return conn
+    except mysql.connector.Error as err:
+        logger.error(f"Error connecting to database: {err}")
+        raise
+
 def fetch_forex_data(currency1, currency2, start_date, end_date):
     """
-    Fetch historical forex data from Alpha Vantage API.
+    Fetch forex data from the STOCK table for a specific currency pair and date range.
     """
-    api_key = 'YOUR_API_KEY'  # Replace with your new API key
-    url = f"https://www.alphavantage.co/query"
-    
-    params = {
-        "function": "FX_DAILY",
-        "from_symbol": currency1,
-        "to_symbol": currency2,
-        "apikey": api_key,
-        "outputsize": "full"  # Get full data for longer date ranges
-    }
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
 
-    response = requests.get(url, params=params)
-    logger.info(f"API Response: {response.text}")  # Log the full response for debugging
+        # Assuming the stock_name contains the currency pair, e.g., "USD/EUR"
+        currency_pair = f"{currency1}/{currency2}"
 
-    if response.status_code == 200:
-        data = response.json()
-        if "Time Series FX (Daily)" not in data:
-            error_message = data.get('Error Message', 'Unknown error')
-            raise Exception(f"Error fetching forex data: {error_message}")
-        
-        rates = data["Time Series FX (Daily)"]
-        return {date: {'exchangeRate': float(info['4. close'])} for date, info in rates.items()}
-    else:
-        raise Exception(f"Error fetching data: {response.status_code} - {response.text}")
+        query = """
+        SELECT date, close_price
+        FROM STOCK
+        WHERE stock_name = %s
+        AND date BETWEEN %s AND %s
+        ORDER BY date
+        """
+        cursor.execute(query, (currency_pair, start_date, end_date))
+        data = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return data
+
+    except mysql.connector.Error as err:
+        logger.error(f"Error fetching forex data: {err}")
+        return None
 
 
-def create_forex_graph(base_currency: str, target_currency: str, forex_data):
+def plot_forex_data(data, currency1, currency2):
     """
-    Create an interactive graph for forex data over time.
-
-    Args:
-        base_currency (str): The base currency (e.g., "USD").
-        target_currency (str): The target currency (e.g., "EUR").
-        forex_data (dict): Historical forex rates.
-
-    Returns:
-        str: JSON data for the Plotly graph.
+    Plot the forex data using Plotly.
     """
-    dates = []
-    exchange_rates = []
+    if not data:
+        return None
 
-    # Collect dates and exchange rates
-    for date, rate_data in forex_data.items():
-        dates.append(date)
-        exchange_rates.append(rate_data['exchangeRate'])
+    # Extract the date and exchange_rate (close_price) values
+    dates = [item['date'] for item in data]
+    exchange_rates = [item['close_price'] for item in data]
 
-    # Create a Plotly graph with the historical data
+    # Create a Plotly line chart
     fig = go.Figure()
+
     fig.add_trace(go.Scatter(
         x=dates,
         y=exchange_rates,
-        mode="lines+markers",  # Show a line connecting the dots
-        name=f"{base_currency}/{target_currency}",
-        text=[f"{base_currency}/{target_currency}: {rate:.2f}" for rate in exchange_rates],
-        textposition="top center",  # Position the text above the marker
-        marker=dict(size=6, color='blue')  # Customize the marker appearance
+        mode='lines+markers',
+        name=f'{currency1} to {currency2}',
+        line=dict(color='green', width=2),
+        marker=dict(size=6, color='red')
     ))
 
-    # Update layout with titles and axis labels
+    # Customize the layout
     fig.update_layout(
-        title=f"Exchange Rate: {base_currency} to {target_currency}",
+        title=f"Exchange Rate: {currency1} to {currency2}",
         xaxis_title="Date",
         yaxis_title="Exchange Rate",
+        paper_bgcolor="black",
+        plot_bgcolor="black",
+        font=dict(color="white"),
         hovermode="closest",
-        showlegend=False  # Remove legend since we only have one data point
+        dragmode="zoom"
     )
-    
-    # Return the JSON for the Plotly graph
+
+    # Convert the Plotly figure to JSON for rendering in the template
     return fig.to_json()
+
+ 

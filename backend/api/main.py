@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from passlib.context import CryptContext
 from api.jwt_auth import create_access_token
-from api.dashboard import fetch_forex_data, create_forex_graph
+from api.dashboard import fetch_forex_data, plot_forex_data
 
 import os
 import logging
@@ -131,36 +131,31 @@ from datetime import datetime, timedelta
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    """Render the dashboard page."""
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
+    
 @app.post("/dashboard", response_class=HTMLResponse)
-async def dashboard_post(request: Request, currency1: str = Form(...), currency2: str = Form(...)):
-    """Generate and display the forex dashboard."""
-    try:
-        # Calculate the start date (30 days ago) and end date (current date)
-        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
-        end_date = datetime.now().strftime("%Y-%m-%d")
-        
-        # Fetch forex data with dynamic start_date (30 days ago) and end_date (current date)
-        forex_data = fetch_forex_data(currency1, currency2, start_date, end_date)
-        
-        # Create the forex graph with the same date range
-        graph_data = create_forex_graph(currency1, currency2, forex_data)
-        
-        return templates.TemplateResponse(
-            "dashboard.html", {
-                "request": request,
-                "currency1": currency1,
-                "currency2": currency2,
-                "graph_data": graph_data,
-            }
-        )
-    except Exception as e:
-        logger.error(f"Error generating dashboard: {e}")
-        return templates.TemplateResponse(
-            "dashboard.html", {"request": request, "error_message": "Error fetching forex data."}
-        )
+async def dashboard(request: Request, currency2: str = Form(...)):
+    
+    currency1 = "USD" 
+    start_date = "2020-12-01" 
+    end_date = datetime.today()
+
+    # Fetch forex data for the selected currencies and date range
+    forex_data = fetch_forex_data(currency1, currency2, start_date, end_date.strftime('%Y-%m-%d'))
+
+    # Plot the forex data
+    graph_data = plot_forex_data(forex_data, currency1, currency2)
+
+    if graph_data is None:
+        error_message = "No data available for the selected currencies and date range."
+        return templates.TemplateResponse("dashboard.html", {"request": request, "error_message": error_message})
+
+    return templates.TemplateResponse(
+        "dashboard.html", 
+        {"request": request, "graph_data": graph_data, "currency1": currency1, "currency2": currency2}
+    )
+
 
 @app.get("/forgot_password", response_class=HTMLResponse)
 async def forgot_password(request: Request):
