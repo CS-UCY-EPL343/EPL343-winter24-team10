@@ -106,4 +106,33 @@ def plot_forex_data(data, currency1, currency2):
     # Convert the Plotly figure to JSON for rendering in the template
     return fig.to_json()
 
- 
+def fetch_news_for_currency(currency):
+    """
+    Fetch all news articles and filter those that contain the selected currency.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Fetch all news articles, including image URL, and limit the number for performance
+        query = """
+        SELECT source_name, title, url, published_at, description, content, url_to_image
+        FROM news_articles
+        WHERE title LIKE %s OR description LIKE %s OR content LIKE %s
+        ORDER BY published_at DESC
+        """
+        # Search for the currency name in title, description, or content
+        search_pattern = f"%{currency}%"
+        cursor.execute(query, (search_pattern, search_pattern, search_pattern))
+        news_articles = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return news_articles
+
+    except mysql.connector.Error as err:
+        logger.error(f"Error fetching news data: {err}")
+        return []
+
+
