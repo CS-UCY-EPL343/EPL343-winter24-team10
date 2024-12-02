@@ -168,7 +168,9 @@ async def forgot_password_post(request: Request, password: str = Form(...), pass
     """Handle password reset."""
     if password != password1:
         return templates.TemplateResponse("new_password.html", {"request": request, "Error_Message": "Passwords do not match."})
-    # Add password reset logic
     return templates.TemplateResponse("password_changed.html", {"request": request})
 
 
+# @app.post("/fill_database", response_class=HTMLResponse)
+# async def fill_database():
+    
