@@ -13,6 +13,6 @@ docker cp backup.sql $DB_CONTAINER_NAME:/backup.sql
 docker exec -i $DB_CONTAINER_NAME mysql -u$DB_USER -p$DB_PASS $DB_NAME < /backup.sql
 
 # Clean up the backup file inside the container
-docker exec -i $DB_CONTAINER_NAME rm /backup.sql
+docker exec -i $DB_CONTAINER_NAME rm /stock_backup.sql
 
 echo "Database restored successfully!"
