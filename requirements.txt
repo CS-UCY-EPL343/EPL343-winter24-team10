@@ -8,3 +8,11 @@ python-dotenv
 mysql-connector-python
 mariadb
 python-multipart
+pyjwt
+python-jose
+passlib
+matplotlib
+plotly
+pyotp
+qrcode[pil]
+plotly
