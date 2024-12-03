@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard | View Profile</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/css/profile_styles.css">
+    <style>
+        .btn-modify, .btn-save {
+            background-color: green;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-modify:hover, .btn-save:hover {
+            background-color: darkgreen;
+        }
+    </style>
+</head>
+
+<body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
+    <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+
+        <!-- Header -->
+        <div id="kt_header" class="header header-fixed">
+            <div class="container d-flex align-items-stretch justify-content-between">
+                <div class="brand flex-column-auto" id="kt_brand">
+                    <a class="brand-logo" href="https://www.hfm.com/hf/en/" target="_blank" class="text-bold">
+                        <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM">
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Info Box -->
+        <div class="card card-custom">
+            <div class="card-header">
+                <div class="card-title">
+                    <h2 class="card-label">User Information</h2>
+                </div>
+            </div>
+            <div class="card-body">
+                <form action="#" method="post" id="userInfoForm">
+                    <div class="form-group">
+                        <label for="name"><strong>Name:</strong></label>
+                        <input type="text" id="name" name="name" value="John" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="surname"><strong>Surname:</strong></label>
+                        <input type="text" id="surname" name="surname" value="Doe" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="username"><strong>Username:</strong></label>
+                        <input type="text" id="username" name="username" value="johndoe123" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="email"><strong>Email:</strong></label>
+                        <input type="email" id="email" name="email" value="john.doe@example.com" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="country"><strong>Country:</strong></label>
+                        <input type="text" id="country" name="country" value="United States" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="password"><strong>Password:</strong></label>
+                        <div class="password-container">
+                            <input type="password" id="password" name="password" value="password123" class="form-control" readonly>
+                            <span class="eye-icon" id="togglePassword">
+                                <img src="/pictures/eye-regular.svg" id="eyeOpen" alt="Show Password">
+                                <img src="/pictures/eye-slash-regular.svg" id="eyeClosed" alt="Hide Password" style="display: none;">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" id="modifyButton" class="form-button btn-modify">Modify</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modifyButton = document.getElementById("modifyButton");
+        const formFields = document.querySelectorAll("#userInfoForm .form-control:not(#username):not(#email)");
+        let countryField = document.getElementById("country");
+        const passwordField = document.getElementById("password");
+        const togglePassword = document.getElementById("togglePassword");
+        const eyeOpen = document.getElementById("eyeOpen");
+        const eyeClosed = document.getElementById("eyeClosed");
+
+        let isEditMode = false;
+
+        modifyButton.addEventListener("click", function () {
+            if (isEditMode) {
+                // Save changes: lock fields and revert country dropdown to text field
+                formFields.forEach(field => field.setAttribute("readonly", true));
+
+                const updatedCountryValue = countryField.value;
+                const textField = document.createElement("input");
+                textField.type = "text";
+                textField.id = "country";
+                textField.name = "country";
+                textField.className = "form-control";
+                textField.value = updatedCountryValue;
+                textField.setAttribute("readonly", true);
+
+                countryField.parentElement.replaceChild(textField, countryField);
+                countryField = textField;
+
+                modifyButton.textContent = "Modify Info";
+                modifyButton.classList.remove("btn-save");
+                modifyButton.classList.add("btn-modify");
+                isEditMode = false;
+
+                alert("Changes have been saved!");
+            } else {
+                // Enable editing
+                formFields.forEach(field => field.removeAttribute("readonly"));
+
+                const dropdown = createCountryDropdown(countryField.value);
+                countryField.parentElement.replaceChild(dropdown, countryField);
+                countryField = dropdown;
+
+                modifyButton.textContent = "Save Changes";
+                modifyButton.classList.remove("btn-modify");
+                modifyButton.classList.add("btn-save");
+                isEditMode = true;
+            }
+        });
+
+        function createCountryDropdown(selectedCountry) {
+            const countries = [
+                "United States", "United Kingdom", "Canada", "Germany", "France", "Australia", "India", "Japan", "China", "Brazil"
+            ];
+
+            const dropdown = document.createElement("select");
+            dropdown.id = "country";
+            dropdown.name = "country";
+            dropdown.className = "form-control";
+            countries.forEach(country => {
+                const option = document.createElement("option");
+                option.value = country;
+                option.textContent = country;
+                if (country === selectedCountry) option.selected = true;
+                dropdown.appendChild(option);
+            });
+            return dropdown;
+        }
+
+        togglePassword.addEventListener("click", function () {
+            const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
+            passwordField.setAttribute("type", type);
+            eyeOpen.style.display = type === "password" ? "block" : "none";
+            eyeClosed.style.display = type === "password" ? "none" : "block";
+        });
+    </script>
+</body>
+</html>
