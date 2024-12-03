@@ -149,7 +149,7 @@ async def dashboard(request: Request):
 async def dashboard(request: Request, currency2: str = Form(...)):
     
     currency1 = "USD" 
-    start_date = "2020-12-01" 
+    start_date = "2014-11-07" 
     end_date = datetime.today()
 
     # Fetch forex data for the selected currencies and date range
@@ -222,7 +222,7 @@ async def fill_database(request: Request):
                             values["2. high"],
                             values["3. low"],
                             values["4. close"],
-                            values["5. volume"]  # Assuming 'value' is the volume
+                            1
                         ))
                     conn.commit()
                     logger.info(f"Forex data for {pair} inserted successfully.")
@@ -253,15 +253,23 @@ def save_articles_to_db(articles):
             title = article['title']
             description = article['description']
             url = article['url']
-            url_to_image = article['urlToImage']
+            url_to_image = article.get('urlToImage', None)
             published_at = datetime.strptime(article['publishedAt'], "%Y-%m-%dT%H:%M:%SZ")
-            content = article['content']
+            content = article.get('content', None)
 
-            # Insert the article into the database
+            # Insert the article into the database or update on duplicate
             cursor.execute("""
                 INSERT INTO news_articles (
                     source_id, source_name, author, title, description, url, url_to_image, published_at, content
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    source_name = VALUES(source_name),
+                    author = VALUES(author),
+                    title = VALUES(title),
+                    description = VALUES(description),
+                    url_to_image = VALUES(url_to_image),
+                    published_at = VALUES(published_at),
+                    content = VALUES(content)
             """, (source_id, source_name, author, title, description, url, url_to_image, published_at, content))
 
             conn.commit()
@@ -271,6 +279,7 @@ def save_articles_to_db(articles):
 
     cursor.close()
     conn.close()
+
 
 
 @app.post("/fill_news", response_class=HTMLResponse)
