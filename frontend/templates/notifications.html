@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Notifications </title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/css/notifications_style.css">
+</head>
+
+<body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
+    <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+
+        <!-- Header -->
+        <div id="kt_header" class="header header-fixed">
+            <div class="container d-flex align-items-stretch justify-content-between">
+                <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                    <a class="brand-logo" href="/" class="text-bold">
+                        <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width:250px;margin-top:3px;margin-left:-20px">
+                    </a>
+                </div>
+            </div>../frontend/static/css/profile_styles.css 
+            <div class="user-info" style="align-content: end;">
+                <a href="/profile" class="user-link">
+                    <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon" style="width:30px;height:30px; margin-top:3px; margin: right 90px;">
+                </a>
+                <span id="username">Username</span> <!-- Replace 'Username' with dynamic content if needed -->
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="kt_sidebar" class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="#" class="sidebar-link">Home</a></li>
+                <li class="sidebar-item"><a href="#" class="sidebar-link">Dashboard</a></li>
+                <li class="sidebar-item"><a href="#" class="sidebar-link">Notifications</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div id="kt_content" class="content">
+            <!-- Form for Adding Notifications -->
+            <div id="addNotificationForm">
+                <select id="currencyInput" class="input-field">
+                    <option value="">Select Currency</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="JPY">JPY</option>
+                    <option value="AUD">AUD</option>
+                </select>
+                <input type="number" id="thresholdInput" class="input-field" placeholder="Enter Threshold" min="1" step="any" />
+                <button id="addNotificationBtn" style="background-color:green;color:white;"  class="btn btn-success" disabled>Add Notification</button>
+            </div>
+
+            <!-- Table for Notifications -->
+            <table class="notification-table">
+                <thead>
+                    <tr>
+                        <th>Currency</th>
+                        <th>Threshold</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="notificationList">
+                    <!-- Dynamic Rows will be added here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Handle adding a new notification
+        document.getElementById('addNotificationBtn').addEventListener('click', function() {
+            // Get input values
+            var currency = document.getElementById('currencyInput').value;
+            var threshold = document.getElementById('thresholdInput').value;
+
+            // Validate input
+            if (!currency || !threshold || threshold <= 0) {
+                alert('Please enter a valid currency and threshold (positive number).');
+                return;
+            }
+
+            // Create a new row in the table
+            var table = document.getElementById('notificationList');
+            var row = table.insertRow();
+
+            var currencyCell = row.insertCell(0);
+            var thresholdCell = row.insertCell(1);
+            var actionsCell = row.insertCell(2);
+
+            currencyCell.textContent = currency;
+            thresholdCell.textContent = threshold;
+
+            // Create the pencil button
+            var pencilButton = document.createElement('button');
+            pencilButton.textContent = '✎';
+            pencilButton.classList.add('pencil-btn');
+            pencilButton.addEventListener('click', function() {
+                // Show Edit and Delete buttons when the pencil is clicked
+                var editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.classList.add('edit-btn', 'edit-button');
+                editButton.style.backgroundColor = 'green';
+
+                var deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('delete-btn');
+                deleteButton.style.backgroundColor = 'red';
+
+                actionsCell.innerHTML = ''; // Clear previous content
+                actionsCell.appendChild(editButton);
+                actionsCell.appendChild(deleteButton);
+
+                // Handle Edit Button Click
+                editButton.addEventListener('click', function () {
+                    // Store original values in variables
+                    const originalCurrency = currencyCell.textContent.trim();
+                    const originalThreshold = thresholdCell.textContent.trim();
+
+                    // Convert currency cell to a dropdown
+                    currencyCell.innerHTML = `
+                        <select class="edit-input">
+                            <option value="USD" ${originalCurrency === 'USD' ? 'selected' : ''}>USD</option>
+                            <option value="EUR" ${originalCurrency === 'EUR' ? 'selected' : ''}>EUR</option>
+                            <option value="GBP" ${originalCurrency === 'GBP' ? 'selected' : ''}>GBP</option>
+                            <option value="JPY" ${originalCurrency === 'JPY' ? 'selected' : ''}>JPY</option>
+                            <option value="AUD" ${originalCurrency === 'AUD' ? 'selected' : ''}>AUD</option>
+                        </select>
+                    `;
+
+                    // Convert threshold cell to an input
+                    thresholdCell.innerHTML = `<input type="number" value="${originalThreshold}" class="edit-input" min="1" step="any">`;
+
+                    // Clear actions cell and add Save (✔) and Cancel (✖) buttons
+                    actionsCell.innerHTML = '';
+                    const saveButton = document.createElement('button');
+                    saveButton.textContent = '✔';
+                    saveButton.classList.add('save-btn');
+                    saveButton.style.backgroundColor = 'green';
+
+                    const cancelButton = document.createElement('button');
+                    cancelButton.textContent = '✖';
+                    cancelButton.classList.add('cancel-btn');
+                    cancelButton.style.backgroundColor = 'red';
+
+                    actionsCell.appendChild(saveButton);
+                    actionsCell.appendChild(cancelButton);
+
+                    // Handle Save Button Click
+                    saveButton.addEventListener('click', function () {
+                        const updatedCurrency = currencyCell.querySelector('select').value;
+                        const updatedThreshold = thresholdCell.querySelector('input').value;
+
+                        // Update the table row with new values
+                        currencyCell.textContent = updatedCurrency;
+                        thresholdCell.textContent = updatedThreshold;
+
+                        // Restore actions cell with Pencil (✎)
+                        actionsCell.innerHTML = '';
+                        actionsCell.appendChild(pencilButton);
+                    });
+
+                    // Handle Cancel Button Click
+                    cancelButton.addEventListener('click', function () {
+                        // Restore original values
+                        currencyCell.textContent = originalCurrency;
+                        thresholdCell.textContent = originalThreshold;
+
+                        // Restore actions cell with Pencil (✎)
+                        actionsCell.innerHTML = '';
+                        actionsCell.appendChild(pencilButton);
+                    });
+                });
+
+                // Handle Delete Button Click
+                deleteButton.addEventListener('click', function() {
+                     // Clear actions cell and add Save (✔) and Cancel (✖) buttons
+                    actionsCell.innerHTML = '';
+                    const saveButton = document.createElement('button');
+                    saveButton.textContent = '✔';
+                    saveButton.classList.add('save-btn');
+                    saveButton.style.backgroundColor = 'green';
+
+                    const cancelButton = document.createElement('button');
+                    cancelButton.textContent = '✖';
+                    cancelButton.classList.add('cancel-btn');
+                    cancelButton.style.backgroundColor = 'red';
+
+                    actionsCell.appendChild(saveButton);
+                    actionsCell.appendChild(cancelButton);
+
+                    // Handle Save Button Click
+                    saveButton.addEventListener('click', function () {
+                        table.deleteRow(row.rowIndex-1);
+                    });
+
+                    // Handle Cancel Button Click
+                    cancelButton.addEventListener('click', function () {
+                        // Restore actions cell with Pencil (✎)
+                        actionsCell.innerHTML = '';
+                        actionsCell.appendChild(pencilButton);
+                    });
+                    
+                });
+            });
+
+            actionsCell.appendChild(pencilButton);
+
+            // Clear input fields
+            document.getElementById('currencyInput').value = '';
+            document.getElementById('thresholdInput').value = '';
+            toggleAddButton();
+        });
+
+        // Function to enable/disable the Add Notification button
+        function toggleAddButton() {
+            var currency = document.getElementById('currencyInput').value;
+            var threshold = document.getElementById('thresholdInput').value;
+            var addButton = document.getElementById('addNotificationBtn');
+
+            if (currency && threshold > 0) {
+                addButton.disabled = false;
+            } else {
+                addButton.disabled = true;
+            }
+        }
+
+        // Add event listeners to the input fields to enable/disable the Add Notification button
+        document.getElementById('currencyInput').addEventListener('change', toggleAddButton);
+        document.getElementById('thresholdInput').addEventListener('input', toggleAddButton);
+    </script>
+</body>
+</html>
