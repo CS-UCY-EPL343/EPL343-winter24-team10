@@ -174,6 +174,7 @@ async def forgot_password(request: Request):
     return templates.TemplateResponse("new_password.html", {"request": request})
 
 
+
 @app.post("/forgot_password", response_class=HTMLResponse)
 async def forgot_password_post(request: Request, password: str = Form(...), password1: str = Form(...)):
     """Handle password reset."""
@@ -326,3 +327,13 @@ async def news(request: Request, currency: str = "USD"):
         "currency": currency,
         "news_articles": news_articles  # Pass the filtered news articles to the template
     })
+
+@app.get("/profile", response_class=HTMLResponse)
+async def profile(request: Request):
+    """Render the password reset page."""
+    return templates.TemplateResponse("profile.html", {"request": request})
+
+@app.get("/notifications", response_class=HTMLResponse)
+async def notifications(request: Request):
+    """Render the password reset page."""
+    return templates.TemplateResponse("notifications.html", {"request": request})
