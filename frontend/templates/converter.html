@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter - HF Markets</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/frontend/static/css/converter.css">
+
+</head>
+<body>
+
+    <!-- Header Section -->
+    <div id="kt_header">
+        <div class="container d-flex align-items-center justify-content-start">
+            <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                <a class="brand-logo" href="https://www.hfeu.com/en/" target="_blank" class="text-bold">
+                    <img class="shrink-logo" src="hfmarkets_logo.svg" alt="HF Markets" style="height:50px;">
+                </a>
+            </div>
+            <!-- User Info Section -->
+            <div class="user-info" style="align-content: end;">
+                <a href="/profile" class="user-link">
+                    <img src="/frontend/templates/user-icon.png" alt="User Icon" class="user-icon"style="width:30px;height:30px; margin-top:3px; margin: right 90px;">
+                </a>
+                <span id="username">Username</span> <!-- Replace 'Username' with dynamic content if needed -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="kt_sidebar" class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item"><a href="/" class="sidebar-link">Home</a></li>
+            <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
+            <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
+            <li class="sidebar-item"><a href="/frontend/templates/trends.html" class="sidebar-link">Trends</a></li>
+            <li class="sidebar-item"><a href="/converter" class="sidebar-link">Currency Converter</a></li>
+        </ul>
+    </div>
+
+    <!-- Currency Converter Section -->
+    <div id="converter">
+        <h2>Currency Converter</h2>
+
+        <!-- Currency Converter Form -->
+        <form id="converter-form">
+            <label for="from-currency">From Currency:</label>
+            <select id="from-currency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="AUD">AUD</option>
+            </select>
+
+            <label for="to-currency">To Currency:</label>
+            <select id="to-currency">
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="AUD">AUD</option>
+            </select>
+
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" placeholder="Enter amount" required>
+
+            <button type="button" onclick="convertCurrency()">Convert</button>
+        </form>
+
+        <!-- Result Display -->
+        <div class="result" id="result">
+            <!-- The result will be shown here -->
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2024 HF Markets. All Rights Reserved.
+    </footer>
+
+    <script>
+        // Function to simulate random exchange rates for currency conversion
+        function getRandomRate() {
+            // Generate a random number between 0.5 and 1.5
+            return (Math.random() * (1.5 - 0.5) + 0.5).toFixed(4);
+        }
+
+        // Function to perform currency conversion
+        function convertCurrency() {
+            // Get input values
+            const fromCurrency = document.getElementById('from-currency').value;
+            const toCurrency = document.getElementById('to-currency').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+
+            // Validate input
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid amount.");
+                return;
+            }
+
+            // Simulate random exchange rate for the selected currencies
+            const rate = getRandomRate();
+
+            // Convert the amount based on the random exchange rate
+            const convertedAmount = (amount * rate).toFixed(2);
+
+            // Display the result
+            const resultElement = document.getElementById('result');
+            resultElement.innerHTML = `${amount} ${fromCurrency} is equal to ${convertedAmount} ${toCurrency} (Exchange Rate: ${rate})`;
+        }
+    </script>
+
+</body>
+</html>
