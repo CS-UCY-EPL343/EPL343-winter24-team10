@@ -1,215 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <title>Notifications</title>
-    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../static/css/notifications_style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/styles.css">
 </head>
+<body>
+    <div>
+        <h2>Your Notifications</h2>
 
-<body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
-    <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+        <!-- Display Error Message if any -->
+        {% if Error_Message %}
+            <div style="color: red; font-weight: bold;">{{ Error_Message }}</div>
+        {% endif %}
 
-        <!-- Header -->
-        <header id="kt_header" class="header header-fixed">
-            <div class="container d-flex align-items-stretch justify-content-between">
-                <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
-                    <a href="/" class="brand-logo text-bold">
-                        <img src="/pictures/hfmarkets_logo.svg" alt="HFM" class="shrink-logo" style="width:250px; margin-top:3px; margin-left:-20px;">
-                    </a>
-                </div>
-            </div>
-            <div class="user-info" style="align-content: end;">
-                <a href="/profile" class="user-link">
-                    <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon" style="width:30px;height:30px; margin-top:3px; margin-right:90px;">
-                </a>
-                <span id="username">Username</span> <!-- Replace with dynamic content -->
-            </div>
-        </header>
-
-        <!-- Sidebar -->
-        <nav id="kt_sidebar" class="sidebar">
-            <ul class="sidebar-menu">
-                <li><a href="/" class="sidebar-link">Home</a></li>
-                <li><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
-                <li><a href="/notifications" class="sidebar-link">Notifications</a></li>
-                <li><a href="/trends" class="sidebar-link">Trends</a></li>
-            </ul>
-        </nav>
-
-        <!-- Main Content -->
-        <main id="kt_content" class="content">
-            <!-- Add Notification Form -->
-            <div id="addNotificationForm">
-                <select id="currencyInput" class="input-field">
-                    <option value="">Select Currency</option>
-                    <option value="USD">USD</option>
+        <!-- Add Notification Form -->
+        <h3>Add a New Notification</h3>
+        <form action="/notifications" method="post">
+            <div>
+                <label for="currency">Currency:</label>
+                <select id="currency" name="currency" required>
                     <option value="EUR">EUR</option>
                     <option value="GBP">GBP</option>
                     <option value="JPY">JPY</option>
                     <option value="AUD">AUD</option>
+                    <option value="CAD">CAD</option>
+                    <option value="CHF">CHF</option>
+                    <option value="NZD">NZD</option>
                 </select>
-                <input type="number" id="thresholdInput" class="input-field" placeholder="Enter Threshold" min="1" step="any">
-                <button id="addNotificationBtn" class="btn btn-success" disabled>Add Notification</button>
             </div>
+            <div>
+                <label for="threshold">Threshold:</label>
+                <input type="number" id="threshold" name="threshold" step="0.01" required>
+            </div>
+            <div>
+                <button type="submit">Add Notification</button>
+            </div>
+        </form>
 
-            <!-- Notifications Table -->
-            <table class="notification-table">
+        <!-- Display Notifications -->
+        {% if notifications %}
+            <table>
                 <thead>
                     <tr>
-                        <th>Currency</th>
                         <th>Threshold</th>
-                        <th>Actions</th>
+                        <th>Date Created</th>
+                        <th>Stock Name</th>
+                        <th>Actions</th> <!-- Added Actions column for Delete -->
                     </tr>
                 </thead>
-                <tbody id="notificationList">
-                    <!-- Dynamic Rows will be added here -->
+                <tbody>
+                    {% for notification in notifications %}
+                        <tr>
+                            <td>{{ notification.threshold }}</td>
+                            <td>{{ notification.date_created }}</td>
+                            <td>{{ notification.stock_name }}</td>
+                            <td>
+                                <form action="/notifications/{{ notification.notification_id }}/delete" method="post">
+                                    <button type="submit" style="color: red;">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
-        </main>
+        {% else %}
+            <p>No notifications found.</p>
+        {% endif %}
     </div>
-
-    <script>
-        // Function to fetch and render notifications from the server
-        async function fetchNotifications() {
-            const response = await fetch('/notifications');
-            const notifications = await response.json();
-            const table = document.getElementById('notificationList');
-            table.innerHTML = '';  // Clear existing rows
-            
-            notifications.forEach(notification => {
-                const row = table.insertRow();
-                row.setAttribute('data-id', notification.notification_id);
-                row.insertCell(0).textContent = notification.currency;
-                row.insertCell(1).textContent = notification.threshold;
-
-                const actionsCell = row.insertCell(2);
-                const pencilButton = document.createElement('button');
-                pencilButton.textContent = '✎';
-                pencilButton.classList.add('pencil-btn');
-                pencilButton.addEventListener('click', function() {
-                    const originalCurrency = notification.currency;
-                    const originalThreshold = notification.threshold;
-
-                    row.cells[0].innerHTML = `<select class="edit-input">
-                        <option value="USD" ${originalCurrency === 'USD' ? 'selected' : ''}>USD</option>
-                        <option value="EUR" ${originalCurrency === 'EUR' ? 'selected' : ''}>EUR</option>
-                        <option value="GBP" ${originalCurrency === 'GBP' ? 'selected' : ''}>GBP</option>
-                        <option value="JPY" ${originalCurrency === 'JPY' ? 'selected' : ''}>JPY</option>
-                        <option value="AUD" ${originalCurrency === 'AUD' ? 'selected' : ''}>AUD</option>
-                    </select>`;
-                    row.cells[1].innerHTML = `<input type="number" value="${originalThreshold}" class="edit-input" min="1" step="any">`;
-
-                    actionsCell.innerHTML = '';
-                    const saveButton = document.createElement('button');
-                    saveButton.textContent = '✔';
-                    saveButton.classList.add('save-btn');
-                    const cancelButton = document.createElement('button');
-                    cancelButton.textContent = '✖';
-                    cancelButton.classList.add('cancel-btn');
-
-                    actionsCell.appendChild(saveButton);
-                    actionsCell.appendChild(cancelButton);
-
-                    saveButton.addEventListener('click', function () {
-                        updateNotification(notification.notification_id, row.cells[0].querySelector('select').value, row.cells[1].querySelector('input').value);
-                        actionsCell.innerHTML = '';
-                        actionsCell.appendChild(pencilButton);
-                    });
-
-                    cancelButton.addEventListener('click', function () {
-                        row.cells[0].textContent = originalCurrency;
-                        row.cells[1].textContent = originalThreshold;
-                        actionsCell.innerHTML = '';
-                        actionsCell.appendChild(pencilButton);
-                    });
-                });
-
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.classList.add('delete-btn');
-                deleteButton.addEventListener('click', function() {
-                    deleteNotification(notification.notification_id);
-                    row.remove();
-                });
-
-                actionsCell.appendChild(pencilButton);
-                actionsCell.appendChild(deleteButton);
-            });
-        }
-
-        // Function to send notification data to the backend
-        async function sendNotificationData(currency, threshold) {
-            const response = await fetch('/notifications', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ currency, threshold }),
-            });
-            if (response.ok) {
-                fetchNotifications();  // Re-fetch notifications after adding a new one
-            } else {
-                alert('Failed to add notification');
-            }
-        }
-
-        // Function to update notification
-        async function updateNotification(id, currency, threshold) {
-            const response = await fetch(`/notifications/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ currency, threshold }),
-            });
-            if (response.ok) {
-                fetchNotifications();  // Re-fetch notifications after editing
-            } else {
-                alert('Failed to update notification');
-            }
-        }
-
-        // Function to delete notification
-        async function deleteNotification(id) {
-            const response = await fetch(`/notifications/${id}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                fetchNotifications();  // Re-fetch notifications after deleting
-            } else {
-                alert('Failed to delete notification');
-            }
-        }
-
-        // Event listener for Add Notification button
-        document.getElementById('addNotificationBtn').addEventListener('click', function() {
-            const currency = document.getElementById('currencyInput').value;
-            const threshold = document.getElementById('thresholdInput').value;
-
-            if (currency && threshold > 0) {
-                sendNotificationData(currency, threshold);
-                document.getElementById('currencyInput').value = '';
-                document.getElementById('thresholdInput').value = '';
-                toggleAddButton();
-            } else {
-                alert('Please enter valid currency and threshold.');
-            }
-        });
-        // Enable/disable Add Notification button
-        function toggleAddButton() {
-            const currency = document.getElementById('currencyInput').value;
-            const threshold = document.getElementById('thresholdInput').value;
-            document.getElementById('addNotificationBtn').disabled = !(currency && threshold > 0);
-        }
-
-        // Event listeners for enabling/disabling button
-        document.getElementById('currencyInput').addEventListener('change', toggleAddButton);
-        document.getElementById('thresholdInput').addEventListener('input', toggleAddButton);
-
-        // Fetch notifications when the page loads
-        window.onload = fetchNotifications;
-    </script>
 </body>
 </html>

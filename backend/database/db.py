@@ -1,5 +1,6 @@
 import os
-import mysql.connector
+from mysql.connector import connect, Error 
+import mysql
 import logging
 import traceback
 
@@ -173,113 +174,372 @@ def create_tables():
         return {"Error_Message": f"An unexpected error occurred: {str(e)}"}
     
 def create_all_stored_procedures():
-    # Establish connection to the database
-    connection = get_db_connection()
-    
-    cursor = connection.cursor()
-
-    # SQL to create all stored procedures
-    create_procedures_sql = """
--- AuthenticateUser Procedure
-CREATE PROCEDURE AuthenticateUser(
-    IN p_email VARCHAR(255),
-    IN p_password VARCHAR(255))
-BEGIN
-    DECLARE user_count INT;
-
-    -- Check if the user exists with the given email and password
-    SELECT COUNT(*) INTO user_count
-    FROM USER
-    WHERE email = p_email AND password = p_password;
-
-    IF user_count = 1 THEN
-        SELECT 'Authentication successful' AS message;
-    ELSE
-        SELECT 'Invalid email or password' AS message;
-    END IF;
-END$$
-
--- CreateAccount Procedure
-CREATE PROCEDURE CreateAccount(  
-    IN p_email VARCHAR(255),
-    IN p_password VARCHAR(255),
-    IN p_username VARCHAR(50),
-    IN p_status VARCHAR(50),
-    IN p_lvl INT
-)
-BEGIN 
-    DECLARE user_exists INT DEFAULT 0;
-
-    -- Check if the user with the given email already exists
-    SELECT COUNT(*) INTO user_exists
-    FROM USER
-    WHERE email = p_email;
-
-    -- If the user exists, exit the procedure with a message
-    IF user_exists > 0 THEN
-        SELECT 'Error: Email already exists' AS message;
-        LEAVE;
-    END IF;
-
-    -- Insert the new user into the USER table
-    INSERT INTO USER (email, password, username, status, lvl)
-    VALUES (p_email, p_password, p_username, p_status, p_lvl);
-
-    -- Optionally, retrieve and return the new user ID
-    SELECT LAST_INSERT_ID() AS new_user_id;
-
-    -- Return a success message
-    SELECT 'Account created successfully' AS message;
-END$$
-
--- CalculateStockPercentageChange Procedure
-CREATE PROCEDURE CalculateStockPercentageChange(IN start_date DATE, IN end_date DATE)
-BEGIN
-    SELECT stock_name, 
-        (MAX(close_price) - MIN(open_price)) / MIN(open_price) * 100 AS percentage_change
-    FROM STOCK
-    WHERE date BETWEEN start_date AND end_date
-    GROUP BY stock_name;
-END$$
-
--- FindMostPopularStock Procedure
-CREATE PROCEDURE FindMostPopularStock()
-BEGIN
-    SELECT stock_id, COUNT(*) AS notification_count
-    FROM NOTIFICATIONS
-    GROUP BY stock_id
-    ORDER BY notification_count DESC
-    LIMIT 1;
-END$$
-
--- GetLatestStockId Procedure
-CREATE PROCEDURE GetLatestStockId(
-    IN p_stock_name VARCHAR(100),
-    OUT p_stock_id INT
-)
-BEGIN
-    -- Retrieve the stock ID for the most up-to-date instance of the given stock name
-    SELECT stock_id
-    INTO p_stock_id
-    FROM STOCK
-    WHERE stock_name = p_stock_name
-    ORDER BY date DESC
-    LIMIT 1;
-
-    -- Raise an error if stock is not found
-    IF p_stock_id IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Stock not found for the given name';
-    END IF;
-END$$
-    """
-
+    connection = None
+    cursor = None
     try:
-        cursor.execute(create_procedures_sql)
-        connection.commit()
-        print("Stored procedures created successfully.")
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
+        # Establish connection to the database
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # List of procedure names to drop
+        procedure_names = [
+            "AuthenticateUser",
+            "CreateAccount",
+            "CalculateStockPercentageChange",
+            "FindMostPopularStock",
+            "GetLatestStockId",
+            "GetStockOpenPrices",
+            "InsertNotification",
+            "InsertStock",
+            "ChangePassword",
+            "GetStockPredictionByName",
+            "GetStockValue",
+            "ExchangeCurrency"
+        ]
+
+        # Drop existing procedures
+        for proc in procedure_names:
+            try:
+                cursor.execute(f"DROP PROCEDURE IF EXISTS {proc}")
+                connection.commit()
+                logging.info(f"Dropped procedure if it existed: {proc}")
+            except Error as e:
+                logging.error(f"Error while dropping procedure {proc}: {e}")
+
+        # List of stored procedure definitions
+        stored_procedures = [
+            """
+            CREATE PROCEDURE AuthenticateUser(
+                IN p_email VARCHAR(255),
+                IN p_password VARCHAR(255)
+            )
+            BEGIN
+                DECLARE user_count INT;
+
+                SELECT COUNT(*) INTO user_count
+                FROM `USER`
+                WHERE email = p_email AND password = p_password;
+
+                IF user_count = 1 THEN
+                    SELECT 'Authentication successful' AS message;
+                ELSE
+                    SELECT 'Invalid email or password' AS message;
+                END IF;
+            END;
+            """,
+            """
+            CREATE PROCEDURE CreateAccount(
+                IN p_email VARCHAR(255),
+                IN p_password VARCHAR(255),
+                IN p_username VARCHAR(50),
+                IN p_status VARCHAR(50),
+                IN p_lvl INT
+            )
+            BEGIN
+                DECLARE user_exists INT DEFAULT 0;
+
+                SELECT COUNT(*) INTO user_exists
+                FROM `USER`
+                WHERE email = p_email;
+
+                IF user_exists > 0 THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Error: Email already exists';
+                ELSE
+                    INSERT INTO `USER` (email, password, username, status, lvl)
+                    VALUES (p_email, p_password, p_username, p_status, p_lvl);
+
+                    SELECT LAST_INSERT_ID() AS new_user_id;
+                END IF;
+            END;
+            """,
+            """
+            CREATE PROCEDURE CalculateStockPercentageChange(
+                IN start_date DATE,
+                IN end_date DATE
+            )
+            BEGIN
+                SELECT stock_name,
+                       (MAX(close_price) - MIN(open_price)) / MIN(open_price) * 100 AS percentage_change
+                FROM STOCK
+                WHERE date BETWEEN start_date AND end_date
+                GROUP BY stock_name;
+            END;
+            """,
+            """
+            CREATE PROCEDURE FindMostPopularStock()
+            BEGIN
+                SELECT stock_id, COUNT(*) AS notification_count
+                FROM NOTIFICATIONS
+                GROUP BY stock_id
+                ORDER BY notification_count DESC
+                LIMIT 1;
+            END;
+            """,
+            """
+            CREATE PROCEDURE GetLatestStockId(
+                IN p_stock_name VARCHAR(100),
+                OUT p_stock_id INT
+            )
+            BEGIN
+                SELECT stock_id
+                INTO p_stock_id
+                FROM STOCK
+                WHERE stock_name = p_stock_name
+                ORDER BY date DESC
+                LIMIT 1;
+
+                IF p_stock_id IS NULL THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Stock not found for the given name';
+                END IF;
+            END;
+            """,
+            """
+            CREATE PROCEDURE GetStockOpenPrices(
+                IN start_date DATE,
+                IN end_date DATE,
+                IN stock_name VARCHAR(100)
+            )
+            BEGIN
+                SELECT 
+                    stock_name, 
+                    date, open_price
+                FROM 
+                    STOCK
+                WHERE 
+                    STOCK.stock_name = stock_name 
+                    AND date BETWEEN start_date AND end_date
+                ORDER BY date;
+            END;
+            """,
+            """
+            CREATE PROCEDURE InsertNotification(
+                IN p_threshold DECIMAL(10, 2),
+                IN p_user_id INT,
+                IN p_stock_name VARCHAR(255)
+            )
+            BEGIN
+                DECLARE stock_id INT;
+
+                IF NOT EXISTS (SELECT 1 FROM USER WHERE user_id = p_user_id) THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'User does not exist';
+                END IF;
+
+                SELECT s.stock_id INTO stock_id
+                FROM STOCK s
+                WHERE s.stock_name = p_stock_name
+                ORDER BY s.date DESC
+                LIMIT 1;
+
+                IF stock_id IS NULL THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Stock does not exist';
+                END IF;
+
+                INSERT INTO NOTIFICATIONS (threshold, user_id, stock_id)
+                VALUES (p_threshold, p_user_id, stock_id);
+            END;
+            """,
+            """
+            CREATE PROCEDURE InsertStock(
+                IN p_stock_name VARCHAR(100),
+                IN p_date DATE,
+                IN p_open_price DECIMAL(10, 2),
+                IN p_close_price DECIMAL(10, 2),
+                IN p_high_price DECIMAL(10, 2),
+                IN p_low_price DECIMAL(10, 2),
+                IN p_value DECIMAL(15, 2)
+            )
+            BEGIN
+                INSERT INTO STOCK (stock_name, date, open_price, close_price, high_price, low_price, value)
+                VALUES (p_stock_name, p_date, p_open_price, p_close_price, p_high_price, p_low_price, p_value);
+
+                INSERT INTO STOCK (stock_name, date, open_price, close_price, high_price, low_price, value)
+                VALUES ('USD', p_date, 1.00, 1.00, 1.00, 1.00, 1.00);
+            END;
+            """,
+            """
+            CREATE PROCEDURE ChangePassword(
+                IN p_username VARCHAR(50),
+                IN p_old_password VARCHAR(255),
+                IN p_new_password VARCHAR(255)
+            )
+            BEGIN
+                DECLARE user_count INT;
+
+                SELECT COUNT(*) INTO user_count
+                FROM USER
+                WHERE username = p_username AND password = p_old_password;
+
+                IF user_count = 0 THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Invalid username or old password';
+                ELSE
+                    UPDATE USER
+                    SET password = p_new_password
+                    WHERE username = p_username;
+                END IF;
+            END;
+            """,
+            """
+            CREATE PROCEDURE GetStockPredictionByName(
+                IN stock_name VARCHAR(100)
+            )
+            BEGIN
+                DECLARE up_count INT DEFAULT 0;
+                DECLARE down_count INT DEFAULT 0;
+                DECLARE total_count INT DEFAULT 0;
+                DECLARE current_price DECIMAL(10, 2);
+                DECLARE stock_id INT;
+
+                SELECT stock_id INTO stock_id
+                FROM STOCK
+                WHERE stock_name = stock_name
+                ORDER BY date DESC
+                LIMIT 1;
+
+                IF stock_id IS NULL THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Stock not found';
+                END IF;
+
+                SELECT close_price INTO current_price
+                FROM STOCK
+                WHERE stock_id = stock_id
+                ORDER BY date DESC
+                LIMIT 1;
+
+                IF current_price IS NULL THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Stock price not available';
+                END IF;
+
+                SELECT COUNT(*) INTO total_count
+                FROM NOTIFICATIONS
+                WHERE stock_id = stock_id;
+
+                IF total_count = 0 THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'No notifications found for this stock';
+                END IF;
+
+                SELECT 
+                    SUM(CASE WHEN threshold < current_price THEN 1 ELSE 0 END) AS up_count,
+                    SUM(CASE WHEN threshold >= current_price THEN 1 ELSE 0 END) AS down_count
+                INTO up_count, down_count
+                FROM NOTIFICATIONS
+                WHERE stock_id = stock_id;
+
+                IF up_count > down_count THEN
+                    SELECT 'The majority believe the stock will go up' AS prediction;
+                ELSEIF down_count > up_count THEN
+                    SELECT 'The majority believe the stock will go down' AS prediction;
+                ELSE
+                    SELECT 'The votes are split evenly' AS prediction;
+                END IF;
+            END;
+            """,
+            """
+            CREATE PROCEDURE GetStockValue(
+                IN p_stock_name VARCHAR(100),
+                IN p_date DATE,
+                OUT p_value DECIMAL(15, 2)
+            )
+            BEGIN
+                DECLARE stock_count INT;
+
+                SELECT COUNT(*) INTO stock_count
+                FROM STOCK
+                WHERE stock_name = p_stock_name AND date = p_date;
+
+                IF stock_count = 0 THEN
+                    SIGNAL SQLSTATE '45000'
+                        SET MESSAGE_TEXT = 'Stock not found for the given name and date';
+                ELSE
+                    SELECT value INTO p_value
+                    FROM STOCK
+                    WHERE stock_name = p_stock_name AND date = p_date;
+                END IF;
+            END;
+            """,
+            """
+            CREATE PROCEDURE ExchangeCurrency(
+                IN currency_pair VARCHAR(10),
+                IN amount DECIMAL(15, 2),
+                OUT result DECIMAL(15, 2)
+            )
+            BEGIN
+                DECLARE exchange_rate DECIMAL(10, 2);
+
+                SELECT close_price INTO exchange_rate
+                FROM STOCK
+                WHERE stock_name = currency_pair
+                ORDER BY date DESC
+                LIMIT 1;
+
+                IF exchange_rate IS NULL THEN
+                    SET result = 0;
+                    SELECT 'Exchange rate not found' AS message;
+                ELSE
+                    SET result = amount * exchange_rate;
+                END IF;
+            END;
+            """,
+            """ 
+            CREATE PROCEDURE GetUserNotifications(
+                        IN p_user_id INT
+                    )
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM USER WHERE user_id = p_user_id) THEN
+                            SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'User does not exist';
+                        END IF;
+
+                        SELECT n.notification_id,
+                            n.threshold,
+                            n.date_created,
+                            s.stock_name,
+                            s.close_price AS latest_price
+                        FROM NOTIFICATIONS n
+                        JOIN STOCK s ON n.stock_id = s.stock_id
+                        WHERE n.user_id = p_user_id
+                        ORDER BY n.date_created DESC;
+                    END;
+                    """,
+                    """
+                    CREATE PROCEDURE DeleteNotification(
+                        IN p_notification_id INT
+                    )
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM NOTIFICATIONS WHERE notification_id = p_notification_id) THEN
+                            SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'Notification does not exist';
+                        END IF;
+
+                        DELETE FROM NOTIFICATIONS
+                        WHERE notification_id = p_notification_id;
+                    END;
+            """
+        ]
+
+        # Execute each stored procedure
+        for procedure in stored_procedures:
+            try:
+                cursor.execute(procedure)
+                connection.commit()
+                logging.info("Stored procedure created successfully.")
+            except Error as e:
+                logging.error(f"Error while creating stored procedure: {e}")
+                print(f"Error while creating stored procedure: {e}")
+
+    except Error as err:
+        logging.error(f"Error while connecting to the database: {err}")
+        print(f"Error while connecting to the database: {err}")
+
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
