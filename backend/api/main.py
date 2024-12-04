@@ -138,7 +138,104 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
         verification_link = f"http://localhost:8000/verify_email?token={verification_token}"
         
         # Render the email body using the template
-        email_body = templates.env.get_template("verification.html").render(
+        email_body = templates.env.get_template("verification.html").render(<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Your Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+            background: -webkit-linear-gradient(45deg, #6a11cb, #2575fc);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background-color 0.3s ease;
+            margin: 0 auto;
+            display: block;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        /* Responsive Styles */
+        @media (max-width: 600px) {
+            .email-container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .button {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Email Content -->
+        <div class="content">
+            <h1>Welcome to Your Dashboard, {{name}}!</h1>
+            <p>We're excited to have you onboard. To get started, please verify your email address by clicking the button below.</p>
+            <a href="{{verification_link}}" class="button">Verify My Email</a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>If you did not register for this account, you can ignore this email or <a href="mailto:support@example.com">contact support</a>.</p>
+        </div>
+    </div>
+</body>
+</html>
+
             name=name,
             verification_link=verification_link
         )
