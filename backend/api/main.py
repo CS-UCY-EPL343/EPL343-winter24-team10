@@ -8,6 +8,10 @@ from passlib.context import CryptContext
 from api.jwt_auth import create_access_token
 from api.dashboard import fetch_forex_data, plot_forex_data, fetch_news_for_currency
 from datetime import timedelta
+from jobs.celery import send_notification
+from pydantic import BaseModel
+
+# from jobs.celery import celery_app
 
 import os
 import logging
@@ -16,7 +20,7 @@ import mysql.connector
 
 load_dotenv()
 
-# Logging configuration
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -36,7 +40,6 @@ DB_PORT = os.getenv("DB_PORT")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
-OPEN_EXCHANGE_RATES_API_KEY = os.getenv("OPEN_EXCHANGE_RATES_API_KEY")
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -46,6 +49,9 @@ ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 
 
 NEWS_API_KEY='09a61846155e40b08a46dba4aa59ef41'
+
+send_notification.delay(user_id=16, stock_id=101, threshold=100.00)
+
 
 # Utility Functions
 def get_db_connection():
@@ -126,10 +132,12 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
             stored_password, user_id = result
             if verify_password(password, stored_password):
                 logger.info(f"User {email} logged in successfully.")
-                access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
-                response = RedirectResponse(url="/dashboard", status_code=303)
-                response.set_cookie("access_token", access_token, httponly=True, secure=True, max_age=1800)
-                return response
+                # Commenting out JWT part
+                # access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
+                # response = RedirectResponse(url="/dashboard", status_code=303)
+                # response.set_cookie("access_token", access_token, httponly=True, secure=True, max_age=1800)
+                # return response
+                return RedirectResponse(url="/dashboard", status_code=303)
         return templates.TemplateResponse("login.html", {"request": request, "Error_Message": "Incorrect Email or Password"})
     except Exception as e:
         logger.error(f"Login error: {e}")
@@ -137,6 +145,7 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
     finally:
         cursor.close()
         conn.close()
+
 from datetime import datetime, timedelta
 
 
@@ -144,10 +153,9 @@ from datetime import datetime, timedelta
 async def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
-    
 @app.post("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, currency2: str = Form(...)):
-    
+
     currency1 = "USD" 
     start_date = "2014-11-07" 
     end_date = datetime.today()
@@ -246,94 +254,125 @@ def save_articles_to_db(articles):
     cursor = conn.cursor()
 
     for article in articles:
+        title = article['title']
+        description = article['description']
+        content = article['content']
+        url = article['url']
+        published_at = article['publishedAt']
+
         try:
-            # Prepare data for insertion
-            source_id = article['source']['id']
-            source_name = article['source']['name']
-            author = article.get('author', 'Unknown')  # Handle missing author field
-            title = article['title']
-            description = article['description']
-            url = article['url']
-            url_to_image = article.get('urlToImage', None)
-            published_at = datetime.strptime(article['publishedAt'], "%Y-%m-%dT%H:%M:%SZ")
-            content = article.get('content', None)
-
-            # Insert the article into the database or update on duplicate
             cursor.execute("""
-                INSERT INTO news_articles (
-                    source_id, source_name, author, title, description, url, url_to_image, published_at, content
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE 
-                    source_name = VALUES(source_name),
-                    author = VALUES(author),
-                    title = VALUES(title),
-                    description = VALUES(description),
-                    url_to_image = VALUES(url_to_image),
-                    published_at = VALUES(published_at),
-                    content = VALUES(content)
-            """, (source_id, source_name, author, title, description, url, url_to_image, published_at, content))
-
+                INSERT INTO NEWS (title, description, content, url, published_at)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (title, description, content, url, published_at))
             conn.commit()
         except Exception as e:
-            print(f"Error inserting article: {e}")
+            logger.error(f"Error saving article: {e}")
             conn.rollback()
-
     cursor.close()
     conn.close()
 
 
-
-@app.post("/fill_news", response_class=HTMLResponse)
-async def fill_news(request: Request):
-    """Fetch news articles from the News API and store them in the database."""
-
-    # Define the query parameters for the API request for multiple currencies
-    currencies = ["USD", "EUR", "GBP", "JPY", "AED", "AUD"]  # Add all required currencies here
-
-    for currency in currencies:
-        url = f"https://newsapi.org/v2/everything?q={currency}&from=2024-11-02&sortBy=publishedAt&language=en&apiKey={NEWS_API_KEY}"
-
-        try:
-            # Fetch news articles from the API
-            response = requests.get(url)
-            response.raise_for_status()  # Raise HTTPError for bad responses
-
-            data = response.json()
-
-            if data.get("status") == "ok":
-                articles = data["articles"]
-                # Save the fetched articles into the database for the current currency
-                save_articles_to_db(articles)
-                print(f"Saved news for {currency}")
-            else:
-                print(f"Failed to fetch news for {currency}: {data.get('message')}")
-        
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching data from News API for {currency}: {e}")
-
-    return templates.TemplateResponse("dashboard.html", {"request": request, "message": "Database filled with news articles for all currencies."})
+@app.get("/fetch_news", response_class=HTMLResponse)
+async def fetch_news(request: Request):
+    url = f"https://newsapi.org/v2/everything?q=currency&apiKey={NEWS_API_KEY}"
+    response = requests.get(url)
+    news = response.json()
+    if news['status'] == 'ok':
+        articles = news['articles']
+        save_articles_to_db(articles)
+    return templates.TemplateResponse("news.html", {"request": request, "articles": articles})
 
 
-@app.get("/news", response_class=HTMLResponse)
-async def news(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
-
-    # Fetch all news and filter by the selected currency
-    news_articles = fetch_news_for_currency(currency)
-
-    # Render the dashboard page with the filtered news articles
-    return templates.TemplateResponse("news.html", {
-        "request": request,
-        "currency": currency,
-        "news_articles": news_articles  # Pass the filtered news articles to the template
-    })
-
-@app.get("/profile", response_class=HTMLResponse)
-async def profile(request: Request):
-    """Render the password reset page."""
-    return templates.TemplateResponse("profile.html", {"request": request})
-
-@app.get("/notifications", response_class=HTMLResponse)
+@app.get("/notifications",response_class=HTMLResponse)
 async def notifications(request: Request):
-    """Render the password reset page."""
     return templates.TemplateResponse("notifications.html", {"request": request})
+
+
+# Define the notification model
+class Notification(BaseModel):
+    currency: str
+    threshold: float
+    user_id: int
+    stock_id: int
+
+@app.post("/notifications", response_class=HTMLResponse)
+async def notifications_post(request: Request, notification: Notification):
+    """Save a new notification in the database."""
+    
+    # Validate input (e.g., check if threshold is a positive number)
+    if notification.threshold <= 0:
+        return templates.TemplateResponse("notifications.html", {"request": request, "Error_Message": "Threshold must be positive"})
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO NOTIFICATIONS (threshold, user_id, stock_id, currency)
+            VALUES (%s, %s, %s, %s)
+        """, (notification.threshold, notification.user_id, notification.stock_id, notification.currency))
+        conn.commit()
+        
+        logger.info(f"Notification saved successfully for user {notification.user_id} with threshold {notification.threshold} and stock ID {notification.stock_id}.")
+        return RedirectResponse(url="/notifications", status_code=303)
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error saving notification: {e}")
+        return templates.TemplateResponse("notifications.html", {"request": request, "Error_Message": "An error occurred while saving the notification."})
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# @celery_app.task
+# def check_and_send_notifications():
+#     """Check forex rates and send notifications for any thresholds that are exceeded."""
+#     conn = get_db_connection()
+#     cursor = conn.cursor(dictionary=True)
+    
+#     try:
+#         cursor.execute("""
+#             SELECT n.notification_id, n.threshold, n.user_id, n.stock_id, s.stock_name, s.value
+#             FROM NOTIFICATIONS n
+#             JOIN STOCK s ON n.stock_id = s.stock_id
+#         """)
+#         notifications = cursor.fetchall()
+        
+#         for notification in notifications:
+#             if notification['value'] >= notification['threshold']:
+#                 # Call your send_notification function to notify the user
+#                 send_notification(notification['user_id'], notification['stock_name'], notification['value'])
+#                 logger.info(f"Notification sent to user {notification['user_id']} for stock {notification['stock_name']}.")
+        
+#     except Exception as e:
+#         logger.error(f"Error checking notifications: {e}")
+#     finally:
+#         cursor.close()
+#         conn.close()
+        
+# @celery_app.task
+# def check_and_send_notifications():
+#     """Check forex rates and send notifications for any thresholds that are exceeded."""
+#     conn = get_db_connection()
+#     cursor = conn.cursor(dictionary=True)
+    
+#     try:
+#         cursor.execute("""
+#             SELECT n.notification_id, n.threshold, n.user_id, n.stock_id, s.stock_name, s.value
+#             FROM NOTIFICATIONS n
+#             JOIN STOCK s ON n.stock_id = s.stock_id
+#         """)
+#         notifications = cursor.fetchall()
+        
+#         for notification in notifications:
+#             if notification['value'] >= notification['threshold']:
+#                 # Call your send_notification function to notify the user
+#                 send_notification(notification['user_id'], notification['stock_name'], notification['value'])
+#                 logger.info(f"Notification sent to user {notification['user_id']} for stock {notification['stock_name']}.")
+        
+#     except Exception as e:
+#         logger.error(f"Error checking notifications: {e}")
+#     finally:
+#         cursor.close()
+#         conn.close()

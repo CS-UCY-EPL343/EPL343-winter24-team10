@@ -16,3 +16,8 @@ plotly
 pyotp
 nano
 pandas
+Django
+celery
+redis
+pika
+flower
