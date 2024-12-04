@@ -1,0 +1,151 @@
+    -- GetStockOpenPrices Procedure
+    CREATE PROCEDURE GetStockOpenPrices(
+        IN start_date DATE,
+        IN end_date DATE,
+        IN stock_name VARCHAR(100))
+    BEGIN
+        SELECT 
+            stock_name, 
+            date, open_price
+        FROM 
+            STOCK
+        WHERE 
+            STOCK.stock_name = stock_name 
+            AND date BETWEEN start_date AND end_date
+        ORDER BY date;
+    END$$
+
+        -- InsertNotification Procedure
+    CREATE PROCEDURE InsertNotification(
+        IN p_threshold DECIMAL(10, 2),
+        IN p_user_id INT,
+        IN p_stock_name VARCHAR(255)
+    )
+    BEGIN
+        -- Check if the user exists
+        IF NOT EXISTS (SELECT 1 FROM USER WHERE user_id = p_user_id) THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'User does not exist';
+        END IF;
+
+        -- Get the most up-to-date stock_id by joining with STOCK table
+        DECLARE stock_id INT;
+
+        SELECT s.stock_id INTO stock_id
+        FROM STOCK s
+        WHERE s.stock_name = p_stock_name
+        ORDER BY s.date DESC
+        LIMIT 1;
+
+        -- If no stock found with the given name, raise an error
+        IF stock_id IS NULL THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Stock does not exist';
+        END IF;
+
+        -- Insert a new notification
+        INSERT INTO NOTIFICATIONS (threshold, user_id, stock_id)
+        VALUES (p_threshold, p_user_id, stock_id);
+
+    END$$
+    -- InsertStock Procedure
+    CREATE PROCEDURE InsertStock(
+        IN p_stock_name VARCHAR(100),
+        IN p_date DATE,
+        IN p_open_price DECIMAL(10, 2),
+        IN p_close_price DECIMAL(10, 2),
+        IN p_high_price DECIMAL(10, 2),
+        IN p_low_price DECIMAL(10, 2),
+        IN p_value DECIMAL(15, 2)
+    )
+    BEGIN
+        INSERT INTO STOCK (stock_name, date, open_price, close_price, high_price, low_price, value)
+        VALUES (p_stock_name, p_date, p_open_price, p_close_price, p_high_price, p_low_price, p_value);
+
+        INSERT INTO STOCK (stock_name, date, open_price, close_price, high_price, low_price, value)
+        VALUES ('USD', p_date, 1.00, 1.00, 1.00, 1.00, 1.00);
+    END$$
+
+    -- ChangePassword Procedure
+    CREATE PROCEDURE ChangePassword (
+        IN p_username VARCHAR(50),
+        IN p_old_password VARCHAR(255),
+        IN p_new_password VARCHAR(255)
+    )
+    BEGIN
+        DECLARE user_count INT;
+
+        SELECT COUNT(*) INTO user_count
+        FROM USER
+        WHERE username = p_username AND password = p_old_password;
+
+        IF user_count = 0 THEN
+            SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Invalid username or old password';
+        ELSE
+            UPDATE USER
+            SET password = p_new_password
+            WHERE username = p_username;
+        END IF;
+    END$$
+
+    CREATE PROCEDURE GetStockPredictionByName(IN stock_name VARCHAR(100))
+    BEGIN
+        -- Variables to store counts for predictions
+        DECLARE up_count INT DEFAULT 0;
+        DECLARE down_count INT DEFAULT 0;
+        DECLARE total_count INT DEFAULT 0;
+        DECLARE current_price DECIMAL(10, 2);
+        DECLARE stock_id INT;
+
+        -- Get the stock_id for the given stock_name
+        SELECT stock_id INTO stock_id
+        FROM STOCK
+        WHERE stock_name = stock_name
+        ORDER BY date DESC
+        LIMIT 1;
+
+        -- If stock_name is not found, raise an error and exit
+        IF stock_id IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock not found';
+        END IF;
+
+        -- Get the current stock price (use latest stock entry for the given stock_name)
+        SELECT close_price INTO current_price
+        FROM STOCK
+        WHERE stock_id = stock_id
+        ORDER BY date DESC
+        LIMIT 1;
+
+        -- If no price is found, raise an error and exit
+        IF current_price IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock price not available';
+        END IF;
+
+        -- Count how many users believe the stock will go up or down based on threshold
+        SELECT COUNT(*) INTO total_count
+        FROM NOTIFICATIONS
+        WHERE stock_id = stock_id;
+
+        -- If no notifications exist, raise an error and exit
+        IF total_count = 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No notifications found for this stock';
+        END IF;
+
+        -- Calculate how many users think the stock will go up or down
+        SELECT 
+            SUM(CASE WHEN threshold < current_price THEN 1 ELSE 0 END) AS up_count,
+            SUM(CASE WHEN threshold >= current_price THEN 1 ELSE 0 END) AS down_count
+        INTO up_count, down_count
+        FROM NOTIFICATIONS
+        WHERE stock_id = stock_id;
+
+        -- Compare up vs down votes to see majority
+        IF up_count > down_count THEN
+            SELECT 'The majority believe the stock will go up' AS prediction;
+        ELSEIF down_count > up_count THEN
+            SELECT 'The majority believe the stock will go down' AS prediction;
+        ELSE
+            SELECT 'The votes are split evenly' AS prediction;
+        END IF;
+    END;

@@ -1,30 +1,36 @@
-from fastapi import FastAPI, Request, Form, HTTPException, Response
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
-from passlib.context import CryptContext
-from api.jwt_auth import create_access_token ,create_email_verification_token
-from api.dashboard import fetch_forex_data, plot_forex_data, fetch_news_for_currency
-from datetime import timedelta
-from jobs.celery import send_notification
-from pydantic import BaseModel
-
-# from jobs.celery import celery_app
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email_validator import validate_email, EmailNotValidError
-
+# Standard library imports
 import os
+import logging
 import jwt
 import smtplib
-import logging
 import requests
 import mysql.connector
 
-load_dotenv()
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
+# Third-party library imports
+from dotenv import load_dotenv
+from email_validator import validate_email, EmailNotValidError
+from passlib.context import CryptContext
+from pydantic import BaseModel
+
+# Database imports
+from database.db import drop_tables, create_tables, create_all_stored_procedures
+
+# FastAPI imports
+from fastapi import FastAPI, Request, Form, HTTPException, Response, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
+# Local application imports
+from api.jwt_auth import create_access_token, create_email_verification_token, verify_access_token
+from api.dashboard import fetch_forex_data, plot_forex_data, fetch_news_for_currency
+from jobs.celery import send_notification
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,19 +52,18 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
+SECRET_KEY = os.getenv('SECRET_KEY')
+ALGORITHM = os.getenv('ALGORITHM')
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')
+
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-ALPHA_VANTAGE_API_KEY = 'Z9PPR7T1ICWXAP1P'
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 
+NEWS_API_KEY=os.getenv('NEWS_API_KEY')
 
-NEWS_API_KEY='09a61846155e40b08a46dba4aa59ef41'
-
-send_notification.delay(user_id=16, stock_id=101, threshold=100.00)
-
-
-# Utility Functions
 def get_db_connection():
     """Establish a connection to the database."""
     return mysql.connector.connect(
@@ -71,6 +76,7 @@ def get_db_connection():
         collation="utf8mb4_general_ci",
     )
 
+
 def send_email(to_email: str, subject: str, body: str):
     from_email = "christosxifias@gmail.com"
     password = 'qaka svdx huhr akxu'
@@ -79,16 +85,15 @@ def send_email(to_email: str, subject: str, body: str):
     msg["From"] = from_email
     msg["To"] = to_email
     msg["Subject"] = subject
-
     msg.attach(MIMEText(body, "html"))
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(from_email, password)
             server.sendmail(from_email, to_email, msg.as_string())
-        print("Email sent successfully")
+        logger.info("Email sent successfully")
     except Exception as e:
-        print(f"Error sending email: {e}")
+        logger.error(f"Error sending email: {e}")
 
 
 def verify_password(plain_password, hashed_password):
@@ -101,33 +106,43 @@ def hash_password(password: str):
     return pwd_context.hash(password)
 
 
-# Routes
+def set_auth_cookie(response: Response, user_id: int):
+    """Set the authentication cookie for the user."""
+    access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
+    response.set_cookie(
+        "access_token", access_token, httponly=True, secure=True, max_age=1800
+    )
+
+def get_current_user(request: Request):
+    token = request.cookies.get("access_token")
+    if token is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = verify_access_token(token)  # Verify the JWT token
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return user_id
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token or expired")
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     """Render the home page."""
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.get("/register", response_class=HTMLResponse)
-async def register(request: Request):
-    """Render the registration page."""
-    return templates.TemplateResponse("register.html", {"request": request})
-
-
 @app.post("/register")
 async def register_user(request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)):
     """Register a new user and send email verification."""
-    # Validate email format
     try:
         valid = validate_email(email)
-        email = valid.email  # Clean the email
+        email = valid.email  
     except EmailNotValidError as e:
         return {"Error_Message": f"Invalid email format: {str(e)}"}
     
     # Hash the password
     hashed_password = hash_password(password)
     
-    # Store the user data in the database
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -137,13 +152,11 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
         """, (email, hashed_password, name))
         conn.commit()
         
-        # Generate email verification token
         verification_token = create_email_verification_token(email)
         
-        # Create verification link
         verification_link = f"http://localhost:8000/verify_email?token={verification_token}"
         
-        email_body = templates.get_template("verification_email.html").render(
+        email_body = templates.get_template("verification.html").render(
             name=name,
             verification_link=verification_link
         )
@@ -157,10 +170,12 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
     finally:
         cursor.close()
         conn.close()
-
         
-SECRET_KEY='secret_key'
-ALGORITHM='HS256'
+@app.get("/register", response_class=HTMLResponse)
+async def get_register_page(request: Request):
+    """Render the register page."""
+    return templates.TemplateResponse("register.html", {"request": request})
+
 @app.get("/verify_email")
 async def verify_email(request: Request, token: str):
     """Verify the user's email using the token."""
@@ -170,7 +185,6 @@ async def verify_email(request: Request, token: str):
         if not email:
             raise HTTPException(status_code=400, detail="Invalid token")
         
-        # Update the user's email verification status in the database
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE USER SET email_verified = TRUE WHERE email = %s", (email,))
@@ -182,37 +196,34 @@ async def verify_email(request: Request, token: str):
     except jwt.JWTError:
         raise HTTPException(status_code=400, detail="Invalid token")
 
-
 @app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
+async def get_login_page(request: Request):
     """Render the login page."""
     return templates.TemplateResponse("login.html", {"request": request})
 
-@app.get("/confirmation_verify", response_class=HTMLResponse)
-async def confirmation_verify(request: Request):
-    """Render the login page."""
-    return templates.TemplateResponse("confirmation_verify.html", {"request": request})
-
-
-
 @app.post("/login")
 async def login_user(request: Request, email: str = Form(...), password: str = Form(...)):
-    """Authenticate the user."""
+    """Authenticate the user and update last login time."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT Password, user_id FROM USER WHERE Email = %s", (email,))
+        cursor.execute("SELECT Password, user_id, last_logged_in FROM USER WHERE Email = %s", (email,))
         result = cursor.fetchone()
         if result:
-            stored_password, user_id = result
+            stored_password, user_id, last_logged_in = result
             if verify_password(password, stored_password):
-                logger.info(f"User {email} logged in successfully.")
-                # Commenting out JWT part
-                # access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
-                # response = RedirectResponse(url="/dashboard", status_code=303)
-                # response.set_cookie("access_token", access_token, httponly=True, secure=True, max_age=1800)
-                # return response
-                return RedirectResponse(url="/dashboard", status_code=303)
+                # Update last_logged_in field with current timestamp
+                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                cursor.execute("UPDATE USER SET last_logged_in = %s WHERE user_id = %s", (current_time, user_id))
+                conn.commit()  # Commit the update
+                
+                # Generate access token
+                access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
+                
+                # Redirect and set access token in cookie
+                response = RedirectResponse(url="/dashboard", status_code=303)
+                response.set_cookie("access_token", access_token, httponly=True, secure=True, max_age=1800)
+                return response
         return templates.TemplateResponse("login.html", {"request": request, "Error_Message": "Incorrect Email or Password"})
     except Exception as e:
         logger.error(f"Login error: {e}")
@@ -221,8 +232,6 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
         cursor.close()
         conn.close()
 
-from datetime import datetime, timedelta
-
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -230,15 +239,12 @@ async def dashboard(request: Request):
 
 @app.post("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, currency2: str = Form(...)):
-
     currency1 = "USD" 
     start_date = "2014-11-07" 
     end_date = datetime.today()
 
-    # Fetch forex data for the selected currencies and date range
     forex_data = fetch_forex_data(currency1, currency2, start_date, end_date.strftime('%Y-%m-%d'))
 
-    # Plot the forex data
     graph_data = plot_forex_data(forex_data, currency1, currency2)
 
     if graph_data is None:
@@ -250,13 +256,10 @@ async def dashboard(request: Request, currency2: str = Form(...)):
         {"request": request, "graph_data": graph_data, "currency1": currency1, "currency2": currency2}
     )
 
-
 @app.get("/forgot_password", response_class=HTMLResponse)
 async def forgot_password(request: Request):
     """Render the password reset page."""
     return templates.TemplateResponse("new_password.html", {"request": request})
-
-
 
 @app.post("/forgot_password", response_class=HTMLResponse)
 async def forgot_password_post(request: Request, password: str = Form(...), password1: str = Form(...)):
@@ -264,22 +267,18 @@ async def forgot_password_post(request: Request, password: str = Form(...), pass
     if password != password1:
         return templates.TemplateResponse("new_password.html", {"request": request, "Error_Message": "Passwords do not match."})
     return templates.TemplateResponse("password_changed.html", {"request": request})
-
-
 @app.post("/fill_database", response_class=HTMLResponse)
 async def fill_database(request: Request):
     """Fill the database with data from Alpha Vantage API."""
-    # Define the list of currency pairs (USD as the baseline)
     currency_pairs = ["USD/EUR", "USD/GBP", "USD/JPY", "USD/AUD", "USD/CAD", "USD/CHF", "USD/NZD"]
 
-    # Function to fetch forex data from Alpha Vantage API
     for pair in currency_pairs:
         params = {
             "function": "FX_DAILY",
             "from_symbol": pair.split('/')[0],
             "to_symbol": pair.split('/')[1],
             "apikey": ALPHA_VANTAGE_API_KEY,
-            "outputsize": "full",  # 'full' will give all available data
+            "outputsize": "full",  
             "datatype": "json"
         }
         
@@ -290,11 +289,9 @@ async def fill_database(request: Request):
             if "Time Series FX (Daily)" in forex_data:
                 data = forex_data["Time Series FX (Daily)"]
 
-                # Establish DB connection to insert data
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 try:
-                    # Loop through the forex data and insert it into the database
                     for date, values in data.items():
                         cursor.execute("""
                             INSERT INTO STOCK (stock_name, date, open_price, high_price, low_price, close_price, value)
@@ -321,7 +318,6 @@ async def fill_database(request: Request):
         else:
             logger.error(f"Failed to fetch data for {pair}: {response.status_code}")
 
-    # Return a message after filling the database
     return HTMLResponse(content="Database successfully filled with forex data!")
 
 def save_articles_to_db(articles):
@@ -347,7 +343,6 @@ def save_articles_to_db(articles):
     cursor.close()
     conn.close()
 
-
 @app.get("/fetch_news", response_class=HTMLResponse)
 async def fetch_news(request: Request):
     url = f"https://newsapi.org/v2/everything?q=currency&apiKey={NEWS_API_KEY}"
@@ -358,122 +353,242 @@ async def fetch_news(request: Request):
         save_articles_to_db(articles)
     return templates.TemplateResponse("news.html", {"request": request, "articles": articles})
 
+@app.get("/news", response_class=HTMLResponse)
+async def news(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
 
-@app.get("/notifications",response_class=HTMLResponse)
-async def notifications(request: Request):
-    return templates.TemplateResponse("notifications.html", {"request": request})
+    news_articles = fetch_news_for_currency(currency)
 
+    return templates.TemplateResponse("news.html", {
+        "request": request,
+        "currency": currency,
+        "news_articles": news_articles
+    })
 
-# Define the notification model
-class Notification(BaseModel):
-    currency: str
-    threshold: float
-    user_id: int
-    stock_id: int
-
-@app.post("/notifications", response_class=HTMLResponse)
-async def notifications_post(request: Request, notification: Notification):
-    """Save a new notification in the database."""
-    
-    # Validate input (e.g., check if threshold is a positive number)
-    if notification.threshold <= 0:
-        return templates.TemplateResponse("notifications.html", {"request": request, "Error_Message": "Threshold must be positive"})
-    
+@app.get("/notifications", response_class=HTMLResponse)
+async def notifications(request: Request, user_id: int = Depends(get_current_user)):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)  # Use dictionary to fetch results as key-value pairs
     
     try:
-        cursor.execute("""
-            INSERT INTO NOTIFICATIONS (threshold, user_id, stock_id, currency)
-            VALUES (%s, %s, %s, %s)
-        """, (notification.threshold, notification.user_id, notification.stock_id, notification.currency))
-        conn.commit()
+        # Call the stored procedure GetUserNotifications to fetch notifications for the user
+        cursor.callproc('GetUserNotifications', (user_id,))
         
-        logger.info(f"Notification saved successfully for user {notification.user_id} with threshold {notification.threshold} and stock ID {notification.stock_id}.")
-        return RedirectResponse(url="/notifications", status_code=303)
+        # Fetch the result set after executing the procedure
+        cursor.execute("SELECT n.notification_id, n.threshold, n.date_created, s.stock_name, s.close_price AS latest_price "
+                       "FROM NOTIFICATIONS n "
+                       "JOIN STOCK s ON n.stock_id = s.stock_id "
+                       "WHERE n.user_id = %s ORDER BY n.date_created DESC", (user_id,))
+        
+        notifications = cursor.fetchall()
+        
+        # Pass the notifications to the template
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, 
+            "notifications": notifications,
+            "user_id": user_id  # Pass user_id to the template
+        })
+    
+    except mysql.connector.Error as e:
+        logging.error(f"MySQL error: {e}")
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "Database error while fetching notifications."
+        })
+    
     except Exception as e:
-        conn.rollback()
-        logger.error(f"Error saving notification: {e}")
-        return templates.TemplateResponse("notifications.html", {"request": request, "Error_Message": "An error occurred while saving the notification."})
+        logging.error(f"Unexpected error: {e}")
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "An unexpected error occurred."
+        })
+    
     finally:
         cursor.close()
         conn.close()
 
 
-# @celery_app.task
-# def check_and_send_notifications():
-#     """Check forex rates and send notifications for any thresholds that are exceeded."""
-#     conn = get_db_connection()
-#     cursor = conn.cursor(dictionary=True)
+@app.post("/notifications", response_class=HTMLResponse)
+async def notifications_post(request: Request, 
+                              threshold: float = Form(...), 
+                              currency: str = Form(...), 
+                              user_id: int = Depends(get_current_user)):
+    """Save a new notification in the database."""
+    logging.info(f"Received data: threshold={threshold}, currency={currency}, user_id={user_id}")
+    currency_in=f'USD/{currency}'
     
-#     try:
-#         cursor.execute("""
-#             SELECT n.notification_id, n.threshold, n.user_id, n.stock_id, s.stock_name, s.value
-#             FROM NOTIFICATIONS n
-#             JOIN STOCK s ON n.stock_id = s.stock_id
-#         """)
-#         notifications = cursor.fetchall()
-        
-#         for notification in notifications:
-#             if notification['value'] >= notification['threshold']:
-#                 # Call your send_notification function to notify the user
-#                 send_notification(notification['user_id'], notification['stock_name'], notification['value'])
-#                 logger.info(f"Notification sent to user {notification['user_id']} for stock {notification['stock_name']}.")
-        
-#     except Exception as e:
-#         logger.error(f"Error checking notifications: {e}")
-#     finally:
-#         cursor.close()
-#         conn.close()
-        
-# @celery_app.task
-# def check_and_send_notifications():
-#     """Check forex rates and send notifications for any thresholds that are exceeded."""
-#     conn = get_db_connection()
-#     cursor = conn.cursor(dictionary=True)
+    if threshold <= 0:
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "Threshold must be positive"
+        })
     
-#     try:
-#         cursor.execute("""
-#             SELECT n.notification_id, n.threshold, n.user_id, n.stock_id, s.stock_name, s.value
-#             FROM NOTIFICATIONS n
-#             JOIN STOCK s ON n.stock_id = s.stock_id
-#         """)
-#         notifications = cursor.fetchall()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.callproc('InsertNotification', (threshold, user_id, currency_in))
+        conn.commit()
+        logging.info(f"Notification saved for user {user_id}, threshold {threshold}, currency {currency_in}.")
+        return RedirectResponse(url="/notifications", status_code=303)
+    
+    except mysql.connector.Error as e:
+        logging.error(f"MySQL error: {e}")
+        conn.rollback()
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "Database error while saving the notification."
+        })
+    
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        conn.rollback()
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "An unexpected error occurred."
+        })
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.post("/notifications/{notification_id}/delete", response_class=RedirectResponse)
+async def delete_notification(request: Request, notification_id: int, user_id: int = Depends(get_current_user)):
+    """Delete a notification from the database."""
+    logging.info(f"Attempting to delete notification ID {notification_id} for user {user_id}")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Call the stored procedure to delete the notification
+        cursor.callproc('DeleteNotification', (notification_id,))
+        conn.commit()
+
+        logging.info(f"Notification ID {notification_id} deleted successfully for user {user_id}.")
+        return RedirectResponse(url="/notifications", status_code=303)
+
+    except mysql.connector.Error as e:
+        logging.error(f"MySQL error: {e}")
+        conn.rollback()
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "Database error while deleting the notification."
+        })
+
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        conn.rollback()
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "An unexpected error occurred."
+        })
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.post("/notifications/{notification_id}/delete", response_class=RedirectResponse)
+async def delete_notification(request: Request, notification_id: int, user_id: int = Depends(get_current_user)):
+    """Delete a notification from the database."""
+    logging.info(f"Attempting to delete notification ID {notification_id} for user {user_id}")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Call the stored procedure to delete the notification
+        cursor.callproc('DeleteNotification', (notification_id,))
+        conn.commit()
+
+        logging.info(f"Notification ID {notification_id} deleted successfully for user {user_id}.")
+        return RedirectResponse(url="/notifications", status_code=303)
+
+    except mysql.connector.Error as e:
+        logging.error(f"MySQL error: {e}")
+        conn.rollback()
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "Database error while deleting the notification."
+        })
+
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        conn.rollback()
+        return templates.TemplateResponse("notifications.html", {
+            "request": request, "Error_Message": "An unexpected error occurred."
+        })
+
+    finally:
+        cursor.close()
+        conn.close()
         
-#         for notification in notifications:
-#             if notification['value'] >= notification['threshold']:
-#                 # Call your send_notification function to notify the user
-#                 send_notification(notification['user_id'], notification['stock_name'], notification['value'])
-#                 logger.info(f"Notification sent to user {notification['user_id']} for stock {notification['stock_name']}.")
-        
-#     except Exception as e:
-#         logger.error(f"Error checking notifications: {e}")
-#     finally:
-#         cursor.close()
-#         conn.close()
-
-
-@app.get("/news", response_class=HTMLResponse)
-async def news(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
-
-    # Fetch all news and filter by the selected currency
-    news_articles = fetch_news_for_currency(currency)
-
-    # Render the dashboard page with the filtered news articles
-    return templates.TemplateResponse("news.html", {
-        "request": request,
-        "currency": currency,
-        "news_articles": news_articles  # Pass the filtered news articles to the template
-    })
-
-
 @app.get("/trends", response_class=HTMLResponse)
-async def trends(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
+async def trends(request: Request, user_id: int = Depends(get_current_user)):
     return templates.TemplateResponse("trends.html", {"request": request})
 
-@app.get("/converter", response_class=HTMLResponse)
-async def converter(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
-    return templates.TemplateResponse("converter.html", {"request": request})
+@app.get("/profile", response_class=HTMLResponse)
+async def profile(request: Request, user_id: int = Depends(get_current_user)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT user_id, username, email, password, lvl, last_logged_in, status, registration_date
+            FROM USER WHERE user_id = %s
+        """, (user_id,))
+        user = cursor.fetchone()
+        
+        if user:
+            user_data = {
+                "user_id": user[0],
+                "username": user[1],
+                "email": user[2],
+                "password": user[3],
+                "lvl": user[4],
+                "last_logged_in": user[5],
+                "status": user[6],
+                "registration_date": user[7]
+            }
+            logging.error(user_data)
+            return templates.TemplateResponse("profile.html", {"request": request, "user": user_data})
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.error(f"Error fetching user data: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    finally:
+        cursor.close()
+        conn.close()
+        
+@app.post("/profile", response_class=HTMLResponse)
+async def change_password(request: Request, 
+                           current_password: str = Form(...), 
+                           new_password: str = Form(...), 
+                           confirm_password: str = Form(...), 
+                           user_id: int = Depends(get_current_user)):
+    """Change the user's password."""
+    
+    if new_password != confirm_password:
+        return templates.TemplateResponse("profile.html", {"request": request, "Error_Message": "New passwords do not match."})
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT password FROM USER WHERE user_id = %s
+        """, (user_id,))
+        result = cursor.fetchone()
+
+        if result:
+            stored_password = result[0]
+            if verify_password(current_password, stored_password):
+                hashed_new_password = hash_password(new_password)
+
+                cursor.execute("""
+                    UPDATE USER SET password = %s WHERE user_id = %s
+                """, (hashed_new_password, user_id))
+                conn.commit()
+
+                return templates.TemplateResponse("profile.html", {"request": request, "Success_Message": "Password changed successfully."})
+            else:
+                return templates.TemplateResponse("profile.html", {"request": request, "Error_Message": "Current password is incorrect."})
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.error(f"Error changing password: {e}")
+        return templates.TemplateResponse("profile.html", {"request": request, "Error_Message": "An error occurred while changing the password."})
+    finally:
+        cursor.close()
+        conn.close()
