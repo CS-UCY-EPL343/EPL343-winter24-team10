@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HF Markets</title>
+    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/css/styles_home.css">
+
+    <style>
+        .header {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100px;
+        }
+
+        .header-image {
+            position: absolute; 
+            top: 80px; 
+            left: 200px;
+            width: calc(100% - 200px); 
+            height: 310px; 
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .footer{
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100px; 
+        }
+
+        .footer-image {
+            position: absolute; 
+            left: 200px; 
+            width: calc(100% - 200px);
+            height: 500px;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="kt_header" class="header header-fixed">
+        <div class="container d-flex align-items-stretch justify-content-between">
+            <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                <a class="brand-logo" href="/" class="text-bold">
+                    <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width:250px;margin-top:3px;margin-left:-20px">
+                </a>
+            </div>
+        </div>
+        <div class="user-info" style="align-content: end;">
+            <a href="/profile" class="user-link">
+                <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon" style="width:30px;height:30px; margin-top:3px; margin: right 90px;">
+            </a>
+            <span id="username">Username</span> <!-- Replace 'Username' with dynamic content if needed -->
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="kt_sidebar" class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item"><a href="/home" class="sidebar-link">Home</a></li>
+            <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
+            <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
+            <li class="sidebar-item"><a href="/trends" class="sidebar-link">Trends</a></li>
+            <li class="sidebar-item"><a href="/news" class="sidebar-link">News</a></li>
+            <li class="sidebar-item"><a href="/converter" class="sidebar-link">Currency Converter</a></li>
+        </ul>
+    </div>
+    
+    <div class="content">
+        <img src="/pictures/homeHF.jpg" class="header-image" alt="Market Image">
+        <div class="cont">
+            <h1>
+                TRADE THE MARKETS WITH A 
+                <span class="highlight">REGULATED BROKER</span>
+            </h1>
+            <p>
+                CFDs on Forex, Commodities, Bonds, Metals, Energies, Shares, Indices and more with 
+                <b>ultra-fast execution</b> and 
+                <b>quick deposits and withdrawals.</b>
+            </p>
+        </div>
+        <footer>
+        <img src="/pictures/hf_group.jpg" class="footer-image" alt="Market Image">
+        </footer>
+    </div>
+</body>
+</html>
