@@ -137,25 +137,23 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
         # Create verification link
         verification_link = f"http://localhost:8000/verify_email?token={verification_token}"
         
-        # Send the verification email
-        email_body = f"""
-        <html>
-            <body>
-                <p>Hello {name},</p>
-                <p>Thank you for registering. Please click the link below to verify your email:</p>
-                <a href="{verification_link}">Verify Email</a>
-            </body>
-        </html>
-        """
+        # Render the email body using the template
+        email_body = templates.env.get_template("verification.html").render(
+            name=name,
+            verification_link=verification_link
+        )
+        
+        # Send the email
         send_email(email, "Email Verification", email_body)
         
         return RedirectResponse(url="/login", status_code=303)
     except Exception as e:
         conn.rollback()
-        return {"Error_Message": "An error occurred while registering the user."}
+        return {"Error_Message": f"An error occurred while registering the user: {str(e)}"}
     finally:
         cursor.close()
         conn.close()
+
         
 SECRET_KEY='secret_key'
 ALGORITHM='HS256'
