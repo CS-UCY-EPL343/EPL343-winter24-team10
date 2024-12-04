@@ -486,6 +486,44 @@ def create_all_stored_procedures():
                     SET result = amount * exchange_rate;
                 END IF;
             END;
+<<<<<<< HEAD
+            """,
+            """ 
+            CREATE PROCEDURE GetUserNotifications(
+                        IN p_user_id INT
+                    )
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM USER WHERE user_id = p_user_id) THEN
+                            SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'User does not exist';
+                        END IF;
+
+                        SELECT n.notification_id,
+                            n.threshold,
+                            n.date_created,
+                            s.stock_name,
+                            s.close_price AS latest_price
+                        FROM NOTIFICATIONS n
+                        JOIN STOCK s ON n.stock_id = s.stock_id
+                        WHERE n.user_id = p_user_id
+                        ORDER BY n.date_created DESC;
+                    END;
+                    """,
+                    """
+                    CREATE PROCEDURE DeleteNotification(
+                        IN p_notification_id INT
+                    )
+                    BEGIN
+                        IF NOT EXISTS (SELECT 1 FROM NOTIFICATIONS WHERE notification_id = p_notification_id) THEN
+                            SIGNAL SQLSTATE '45000'
+                            SET MESSAGE_TEXT = 'Notification does not exist';
+                        END IF;
+
+                        DELETE FROM NOTIFICATIONS
+                        WHERE notification_id = p_notification_id;
+                    END;
+=======
+>>>>>>> f92386ca1c762dfdfb933ad59f5f054a25545e20
             """
         ]
 
@@ -507,8 +545,12 @@ def create_all_stored_procedures():
         if cursor:
             cursor.close()
         if connection:
+<<<<<<< HEAD
+            connection.close()
+=======
             connection.close()
 
 
 
 
+>>>>>>> f92386ca1c762dfdfb933ad59f5f054a25545e20
