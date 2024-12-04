@@ -7,23 +7,17 @@
     <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../static/css/profile_styles.css">
     <style>
-        .btn-modify, .btn-save {
-            background-color: green;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
+        /* Adjust the layout to center the user info card */
+        .content-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 80px); /* Full height minus the header */
+            padding-left: 200px; /* Account for sidebar width */
         }
 
-        .btn-modify:hover, .btn-save:hover {
-            background-color: darkgreen;
-        }
-
-        .error {
-            color: red;
-            font-size: 12px;
-            display: none;
+        .card-custom {
+            width: 400px;
         }
     </style>
 </head>
@@ -34,89 +28,120 @@
         <!-- Header -->
         <div id="kt_header" class="header header-fixed">
             <div class="container d-flex align-items-stretch justify-content-between">
-                <div class="brand flex-column-auto" id="kt_brand">
-                    <a class="brand-logo" href="https://www.hfm.com/hf/en/" target="_blank" class="text-bold">
-                        <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM">
+                <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                    <a class="brand-logo" href="/" class="text-bold">
+                        <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width:250px;margin-top:3px;margin-left:-20px">
                     </a>
                 </div>
             </div>
+            <div class="user-info" style="align-content: end;">
+                <a href="/profile" class="user-link">
+                    <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon" style="width:30px;height:30px; margin-top:3px; margin: right 90px;">
+                </a>
+                <span id="username">Username</span> <!-- Replace 'Username' with dynamic content if needed -->
+            </div>
         </div>
 
-        <!-- User Info Box -->
-        <div class="card card-custom">
-            <div class="card-header">
-                <div class="card-title">
-                    <h2 class="card-label">User Information</h2>
+        <!-- Sidebar -->
+        <div id="kt_sidebar" class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="/" class="sidebar-link">Home</a></li>
+                <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
+                <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
+                <li class="sidebar-item"><a href="/trends" class="sidebar-link">Trends</a></li>
+                <li class="sidebar-item"><a href="/news" class="sidebar-link">News</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- User Info Box -->
+            <div class="card card-custom">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2 class="card-label">User Information</h2>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form action="#" method="post" id="userInfoForm">
+                        <div class="form-group">
+                            <label for="name"><strong>Name:</strong></label>
+                            <input type="text" id="name" name="name" value="John" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="surname"><strong>Surname:</strong></label>
+                            <input type="text" id="surname" name="surname" value="Doe" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="username"><strong>Username:</strong></label>
+                            <input type="text" id="username" name="username" value="johndoe123" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="email"><strong>Email:</strong></label>
+                            <input type="email" id="email" name="email" value="john.doe@example.com" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="country"><strong>Country:</strong></label>
+                            <input type="text" id="country" name="country" value="United States" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="password"><strong>Password:</strong></label>
+                            <div class="input-icon">
+                                <input type="password" id="password" name="password" value="password123" class="form-control" readonly>
+                                <span class="toggle-password" id="togglePassword" style="pointer-events: none; opacity: 0.5;">
+                                    <img src="/pictures/eye-regular.svg" id="eyeOpen" alt="Show Password">
+                                    <img src="/pictures/eye-slash-regular.svg" id="eyeClosed" alt="Hide Password" style="display: none;">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="modifyButton" class="btn btn-modify">Modify Info</button>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="logoutButton" class="btn btn-logout">Log Out</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <div class="card-body">
-                <form action="#" method="post" id="userInfoForm">
-                    <div class="form-group">
-                        <label for="username"><strong>Username:</strong></label>
-                        <!-- Use the Jinja2 variable to inject the username -->
-                        <input type="text" id="username" name="username" value="{{ user.username }}" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="email"><strong>Email:</strong></label>
-                        <!-- Use the Jinja2 variable to inject the email -->
-                        <input type="email" id="email" name="email" value="{{ user.email }}" class="form-control" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="password"><strong>Password:</strong></label>
-                        <div class="password-container">
-                            <input type="password" id="password" name="password" placeholder="Enter new password" class="form-control" readonly>
-                            <span class="eye-icon" id="togglePassword">
-                                <img src="/pictures/eye-regular.svg" id="eyeOpen" alt="Show Password">
-                                <img src="/pictures/eye-slash-regular.svg" id="eyeClosed" alt="Hide Password" style="display: none;">
-                            </span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword"><strong>Confirm Password:</strong></label>
-                        <div class="password-container">
-                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" class="form-control" readonly>
-                            <span class="eye-icon" id="toggleConfirmPassword">
-                                <img src="/pictures/eye-regular.svg" id="eyeOpenConfirm" alt="Show Password">
-                                <img src="/pictures/eye-slash-regular.svg" id="eyeClosedConfirm" alt="Hide Password" style="display: none;">
-                            </span>
-                        </div>
-                        <p id="passwordMismatchError" class="error">Passwords do not match!</p>
-                    </div>
-                    <div class="form-group">
-                        <button type="button" id="modifyButton" class="form-button btn-modify">Modify</button>
-                    </div>
-                </form>
-            </div>
         </div>
+
     </div>
 
+    <!-- JavaScript Logic -->
     <script>
         const modifyButton = document.getElementById("modifyButton");
-        const formFields = document.querySelectorAll("#userInfoForm .form-control:not(#username):not(#email)");
+        const logoutButton = document.getElementById("logoutButton");
+        const editableFields = document.querySelectorAll("#userInfoForm .form-control:not(#username):not(#email)");
+        let countryField = document.getElementById("country");
         const passwordField = document.getElementById("password");
-        const confirmPasswordField = document.getElementById("confirmPassword");
         const togglePassword = document.getElementById("togglePassword");
-        const toggleConfirmPassword = document.getElementById("toggleConfirmPassword");
         const eyeOpen = document.getElementById("eyeOpen");
         const eyeClosed = document.getElementById("eyeClosed");
-        const eyeOpenConfirm = document.getElementById("eyeOpenConfirm");
-        const eyeClosedConfirm = document.getElementById("eyeClosedConfirm");
-        const passwordMismatchError = document.getElementById("passwordMismatchError");
 
         let isEditMode = false;
 
         modifyButton.addEventListener("click", function () {
             if (isEditMode) {
-                // Check if passwords match
-                if (passwordField.value !== confirmPasswordField.value) {
-                    passwordMismatchError.style.display = "block";
-                    return;
-                } else {
-                    passwordMismatchError.style.display = "none";
-                }
+                editableFields.forEach(field => field.setAttribute("readonly", true));
 
-                // Save changes: lock fields
-                formFields.forEach(field => field.setAttribute("readonly", true));
+                const updatedCountryValue = countryField.value;
+                const textField = document.createElement("input");
+                textField.type = "text";
+                textField.id = "country";
+                textField.name = "country";
+                textField.className = "form-control";
+                textField.value = updatedCountryValue;
+                textField.setAttribute("readonly", true);
+
+                countryField.parentElement.replaceChild(textField, countryField);
+                countryField = textField;
+
+                passwordField.setAttribute("type", "password");
+                eyeOpen.style.display = "block";
+                eyeClosed.style.display = "none";
+
+                togglePassword.style.pointerEvents = "none";
+                togglePassword.style.opacity = "0.5";
 
                 modifyButton.textContent = "Modify Info";
                 modifyButton.classList.remove("btn-save");
@@ -125,8 +150,14 @@
 
                 alert("Changes have been saved!");
             } else {
-                // Enable editing
-                formFields.forEach(field => field.removeAttribute("readonly"));
+                editableFields.forEach(field => field.removeAttribute("readonly"));
+
+                const dropdown = createCountryDropdown(countryField.value);
+                countryField.parentElement.replaceChild(dropdown, countryField);
+                countryField = dropdown;
+
+                togglePassword.style.pointerEvents = "auto";
+                togglePassword.style.opacity = "1";
 
                 modifyButton.textContent = "Save Changes";
                 modifyButton.classList.remove("btn-modify");
@@ -135,18 +166,33 @@
             }
         });
 
-        togglePassword.addEventListener("click", function () {
-            const type = passwordField.getAttribute("type") === "password" ? "text" : "password";
-            passwordField.setAttribute("type", type);
-            eyeOpen.style.display = type === "password" ? "block" : "none";
-            eyeClosed.style.display = type === "password" ? "none" : "block";
+        logoutButton.addEventListener("click", function () {
+            window.location.href = "/login";
         });
 
-        toggleConfirmPassword.addEventListener("click", function () {
-            const type = confirmPasswordField.getAttribute("type") === "password" ? "text" : "password";
-            confirmPasswordField.setAttribute("type", type);
-            eyeOpenConfirm.style.display = type === "password" ? "block" : "none";
-            eyeClosedConfirm.style.display = type === "password" ? "none" : "block";
+        function createCountryDropdown(selectedCountry) {
+            const countries = ["United States", "United Kingdom", "Canada", "Germany", "France", "Australia", "India", "Japan", "China", "Brazil"];
+            const dropdown = document.createElement("select");
+            dropdown.id = "country";
+            dropdown.name = "country";
+            dropdown.className = "form-control";
+            countries.forEach(country => {
+                const option = document.createElement("option");
+                option.value = country;
+                option.textContent = country;
+                if (country === selectedCountry) option.selected = true;
+                dropdown.appendChild(option);
+            });
+            return dropdown;
+        }
+
+        togglePassword.addEventListener("click", function () {
+            if (!isEditMode) return;
+
+            const isPassword = passwordField.getAttribute("type") === "password";
+            passwordField.setAttribute("type", isPassword ? "text" : "password");
+            eyeOpen.style.display = isPassword ? "none" : "block";
+            eyeClosed.style.display = isPassword ? "block" : "none";
         });
     </script>
 </body>
