@@ -38,38 +38,6 @@
                             <div class="card-body pt-0">
                                 <form id="registrationForm" action="/register" method="post">
 
-                                    <!-- Country Dropdown -->
-                                    <div class="form-group">
-                                        <label for="country"><b>Country</b></label>
-                                        <select id="country" name="country" class="form-control" required>
-                                            <option value="">Select your country</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <script>
-                                        const apiUrl = 'https://restcountries.com/v3.1/all';
-                                    
-                                        async function fetchCountries() {
-                                            try {
-                                                const response = await fetch(apiUrl);
-                                                const countries = await response.json();
-                                                const countrySelect = document.getElementById('country');
-                                    
-                                                countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
-                                    
-                                                countries.forEach(country => {
-                                                    const option = document.createElement('option');
-                                                    option.value = country.name.common; // Use country name as value
-                                                    option.textContent = country.name.common; // Use country name as display text
-                                                    countrySelect.appendChild(option);
-                                                });
-                                            } catch (error) {
-                                                console.error('Error fetching countries:', error);
-                                            }
-                                        }
-                                    
-                                        fetchCountries();
-                                    </script>
 
                                     <div class="form-group">
                                         <label for="name"><b>Name</b></label>

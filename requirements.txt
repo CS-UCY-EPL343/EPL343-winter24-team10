@@ -16,8 +16,14 @@ plotly
 pyotp
 nano
 pandas
+<<<<<<< HEAD
 Django
 celery
 redis
 pika
 flower
+=======
+python-jose
+email-validator
+jwt
+>>>>>>> 878e7b8b05f9e1fd92d51a18686bd6abdf3eccfd

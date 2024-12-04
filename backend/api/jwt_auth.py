@@ -34,3 +34,9 @@ def verify_access_token(token: str):
         return payload
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+def create_email_verification_token(email: str):
+    expiration = timedelta(hours=1)  # Token expires in 1 hour
+    to_encode = {"sub": email, "exp": datetime.utcnow() + expiration}
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+  
