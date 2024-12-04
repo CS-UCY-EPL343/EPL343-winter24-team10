@@ -79,6 +79,26 @@ async def register(request: Request):
     """Render the login page."""
     return templates.TemplateResponse("login.html", {"request": request})
 
+@app.get("/profile", response_class=HTMLResponse)
+async def register(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("profile.html", {"request": request})
+
+@app.get("/forgot_password", response_class=HTMLResponse)
+async def register(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("forgot_password.html", {"request": request})
+
+@app.get("/index", response_class=HTMLResponse)
+async def register(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/home", response_class=HTMLResponse)
+async def register(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("home.html", {"request": request})
+
 @app.post("/login")
 async def login_user(request: Request, email: str = Form(...), password: str = Form(...)):
     """Check if the user exists and validate the password."""

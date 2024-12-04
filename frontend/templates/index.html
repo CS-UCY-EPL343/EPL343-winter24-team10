@@ -3,19 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HF MARKETS</title>
+    <title>HF Markets</title>
+    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/css/styles_index.css">
+
     <style>
-        button {
-            font-size: 24px; /* Makes the button text appear larger */
-            padding: 10px 20px;
-            cursor: pointer;
+        .header {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100px; /* Fixed height for the header */
+        }
+
+        .header-image {
+            mix-blend-mode: multiply;
+            position: absolute;
+            top: 100px; /* Image placed right below the header */
+            right: 10px; /* Move image to the far right */
+            width: 600px; /* Minimized size of the image */
+            height: auto; /* Maintain aspect ratio */
         }
     </style>
+
 </head>
 <body>
-    <button onclick="window.location.href='/register';">
-        Login
-    </button>    
+    <div class="header">
+        <div class="brand-logo"> 
+            <img src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width: 250px; margin-top:3px; margin-left:-20px">
+        </div>
+        <div class="login-buttons">
+            <a href="/login" class="login">Login</a>
+            <a href="/register" class="register">Register</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <img src="/pictures/hfmIndex-removebg-preview.png" class="header-image">
+
+        <div class="content">
+            <h1>
+                TRADE THE MARKETS WITH A 
+                <span class="highlight">
+                    REGULATED BROKER
+                </span>
+            </h1>
+            <p>
+                CFDs on Forex, Commodities, Bonds, Metals, Energies, Shares, Indices and more with 
+                <b>
+                    ultra-fast execution
+                </b>and 
+                 <b>
+                    quick deposits and withdrawals.
+                </b>
+            </p>
+        </div>
+    
+    </div>
 </body>
 </html>
  
