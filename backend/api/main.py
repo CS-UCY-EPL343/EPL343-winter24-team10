@@ -5,11 +5,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from passlib.context import CryptContext
-from api.jwt_auth import create_access_token
+from api.jwt_auth import create_access_token ,create_email_verification_token
 from api.dashboard import fetch_forex_data, plot_forex_data, fetch_news_for_currency
 from datetime import timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email_validator import validate_email, EmailNotValidError
 
 import os
+import jwt
+import smtplib
 import logging
 import requests
 import mysql.connector
@@ -60,6 +65,25 @@ def get_db_connection():
         collation="utf8mb4_general_ci",
     )
 
+def send_email(to_email: str, subject: str, body: str):
+    from_email = "christosxifias@gmail.com"
+    password = 'qaka svdx huhr akxu'
+    
+    msg = MIMEMultipart()
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
+
+    msg.attach(MIMEText(body, "html"))
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(from_email, password)
+            server.sendmail(from_email, to_email, msg.as_string())
+        print("Email sent successfully")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
 
 def verify_password(plain_password, hashed_password):
     """Verify if the password matches the hashed password."""
@@ -86,8 +110,18 @@ async def register(request: Request):
 
 @app.post("/register")
 async def register_user(request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)):
-    """Register a new user."""
+    """Register a new user and send email verification."""
+    # Validate email format
+    try:
+        valid = validate_email(email)
+        email = valid.email  # Clean the email
+    except EmailNotValidError as e:
+        return {"Error_Message": f"Invalid email format: {str(e)}"}
+    
+    # Hash the password
     hashed_password = hash_password(password)
+    
+    # Store the user data in the database
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -96,16 +130,55 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
             VALUES (%s, %s, %s, 0, NOW())
         """, (email, hashed_password, name))
         conn.commit()
-        logger.info(f"User {name} with email {email} registered successfully.")
+        
+        # Generate email verification token
+        verification_token = create_email_verification_token(email)
+        
+        # Create verification link
+        verification_link = f"http://localhost:8000/verify_email?token={verification_token}"
+        
+        # Send the verification email
+        email_body = f"""
+        <html>
+            <body>
+                <p>Hello {name},</p>
+                <p>Thank you for registering. Please click the link below to verify your email:</p>
+                <a href="{verification_link}">Verify Email</a>
+            </body>
+        </html>
+        """
+        send_email(email, "Email Verification", email_body)
+        
         return RedirectResponse(url="/login", status_code=303)
     except Exception as e:
         conn.rollback()
-        logger.error(f"Error registering user: {e}")
-        return templates.TemplateResponse("register.html", {"request": request, "Error_Message": "Email Already Exists"})
+        return {"Error_Message": "An error occurred while registering the user."}
     finally:
         cursor.close()
         conn.close()
-
+        
+SECRET_KEY='secret_key'
+ALGORITHM='HS256'
+@app.get("/verify_email")
+async def verify_email(request: Request, token: str):
+    """Verify the user's email using the token."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=400, detail="Invalid token")
+        
+        # Update the user's email verification status in the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE USER SET email_verified = TRUE WHERE email = %s", (email,))
+        conn.commit()
+        
+        return {"message": "Email verified successfully!"}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=400, detail="Invalid token")
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -337,3 +410,7 @@ async def profile(request: Request):
 async def notifications(request: Request):
     """Render the password reset page."""
     return templates.TemplateResponse("notifications.html", {"request": request})
+
+@app.get("/news", response_class=HTMLResponse)
+async def news(request: Request):
+    return templates.TemplateResponse("news.html", {"request": request})
