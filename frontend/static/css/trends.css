@@ -1,0 +1,115 @@
+body {
+    background-color: whitesmoke;
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Styles */
+#kt_header {
+    background-color: black;
+    color: white;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 21px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.brand-logo img {
+    margin-left: -20px;
+    height: 50px;
+}
+
+/* Style for User Icon and Username */
+.user-info {
+    display: flex; 
+    align-items: center;
+    color: white;
+    position: absolute;
+    top: 50%;
+    right: 60px;
+    transform: translateY(-50%);
+}
+
+/* Sidebar */
+#kt_sidebar {
+    background-color: black;
+    color: white;
+    width: 200px;
+    height: 100%;
+    position: fixed;
+    top: 80px;
+    left: 0;
+    padding-top: 20px;
+}
+
+.sidebar-menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    margin: 15px 0;
+}
+.sidebar-item:nth-child(4) .sidebar-link {
+    background-color: rgb(165, 1, 1); /* Blue background for active item */
+    color: white; /* White text */
+    font-weight: bold; /* Bold text */
+}
+
+.sidebar-link {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    padding-left: 20px;
+    display: block;
+}
+
+/* Content Area */
+.container {
+    margin-top: 20px;
+    padding: 70px;
+}
+
+/* Button Styles */
+.show-button {
+    background-color: green;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.show-button:hover {
+    background-color: darkgreen;
+}
+
+/* Hide the sections initially */
+.hidden {
+    display: none;
+}
+
+/* Year Range Section */
+.year-range-selector {
+    margin-top: 20px;
+}
+
+.year-range-selector input {
+    padding: 10px;
+    margin: 10px;
+    width: 100px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
