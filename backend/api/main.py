@@ -1,27 +1,35 @@
-from fastapi import FastAPI, Request, Form, HTTPException, Response
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
-from passlib.context import CryptContext
-from api.jwt_auth import create_access_token ,create_email_verification_token
-from api.dashboard import fetch_forex_data, plot_forex_data, fetch_news_for_currency
-from datetime import timedelta
-from jobs.celery import send_notification
-from pydantic import BaseModel
-
-# from jobs.celery import celery_app
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email_validator import validate_email, EmailNotValidError
-
+# Standard library imports
 import os
+import logging
 import jwt
 import smtplib
-import logging
 import requests
 import mysql.connector
+
+from datetime import timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+# Third-party library imports
+from dotenv import load_dotenv
+from email_validator import validate_email, EmailNotValidError
+from passlib.context import CryptContext
+from pydantic import BaseModel
+
+# Database imports
+from database.db import drop_tables,create_tables,create_all_stored_procedures
+
+
+# FastAPI imports
+from fastapi import FastAPI, Request, Form, HTTPException, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+
+# Local application imports
+from api.jwt_auth import create_access_token, create_email_verification_token
+from api.dashboard import fetch_forex_data, plot_forex_data, fetch_news_for_currency
+from jobs.celery import send_notification
 
 load_dotenv()
 
@@ -46,19 +54,20 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
+SECRET_KEY=os.getenv('SECRET_KEY')
+ALGORITHM=os.getenv('ALGORITHM')
+ACCESS_TOKEN_EXPIRE_MINUTES=os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')
+
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-ALPHA_VANTAGE_API_KEY = 'Z9PPR7T1ICWXAP1P'
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 
+# create_all_stored_procedures()
 
-NEWS_API_KEY='09a61846155e40b08a46dba4aa59ef41'
+NEWS_API_KEY=os.getenv('NEWS_API_KEY')
 
-send_notification.delay(user_id=16, stock_id=101, threshold=100.00)
-
-
-# Utility Functions
 def get_db_connection():
     """Establish a connection to the database."""
     return mysql.connector.connect(
@@ -101,7 +110,6 @@ def hash_password(password: str):
     return pwd_context.hash(password)
 
 
-# Routes
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     """Render the home page."""
@@ -117,17 +125,15 @@ async def register(request: Request):
 @app.post("/register")
 async def register_user(request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)):
     """Register a new user and send email verification."""
-    # Validate email format
     try:
         valid = validate_email(email)
-        email = valid.email  # Clean the email
+        email = valid.email  
     except EmailNotValidError as e:
         return {"Error_Message": f"Invalid email format: {str(e)}"}
     
     # Hash the password
     hashed_password = hash_password(password)
     
-    # Store the user data in the database
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -137,10 +143,8 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
         """, (email, hashed_password, name))
         conn.commit()
         
-        # Generate email verification token
         verification_token = create_email_verification_token(email)
         
-        # Create verification link
         verification_link = f"http://localhost:8000/verify_email?token={verification_token}"
         
         email_body = templates.get_template("verification_email.html").render(
@@ -158,9 +162,6 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
         cursor.close()
         conn.close()
 
-        
-SECRET_KEY='secret_key'
-ALGORITHM='HS256'
 @app.get("/verify_email")
 async def verify_email(request: Request, token: str):
     """Verify the user's email using the token."""
@@ -170,7 +171,6 @@ async def verify_email(request: Request, token: str):
         if not email:
             raise HTTPException(status_code=400, detail="Invalid token")
         
-        # Update the user's email verification status in the database
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE USER SET email_verified = TRUE WHERE email = %s", (email,))
@@ -207,7 +207,6 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
             stored_password, user_id = result
             if verify_password(password, stored_password):
                 logger.info(f"User {email} logged in successfully.")
-                # Commenting out JWT part
                 # access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
                 # response = RedirectResponse(url="/dashboard", status_code=303)
                 # response.set_cookie("access_token", access_token, httponly=True, secure=True, max_age=1800)
@@ -235,10 +234,8 @@ async def dashboard(request: Request, currency2: str = Form(...)):
     start_date = "2014-11-07" 
     end_date = datetime.today()
 
-    # Fetch forex data for the selected currencies and date range
     forex_data = fetch_forex_data(currency1, currency2, start_date, end_date.strftime('%Y-%m-%d'))
 
-    # Plot the forex data
     graph_data = plot_forex_data(forex_data, currency1, currency2)
 
     if graph_data is None:
@@ -269,17 +266,15 @@ async def forgot_password_post(request: Request, password: str = Form(...), pass
 @app.post("/fill_database", response_class=HTMLResponse)
 async def fill_database(request: Request):
     """Fill the database with data from Alpha Vantage API."""
-    # Define the list of currency pairs (USD as the baseline)
     currency_pairs = ["USD/EUR", "USD/GBP", "USD/JPY", "USD/AUD", "USD/CAD", "USD/CHF", "USD/NZD"]
 
-    # Function to fetch forex data from Alpha Vantage API
     for pair in currency_pairs:
         params = {
             "function": "FX_DAILY",
             "from_symbol": pair.split('/')[0],
             "to_symbol": pair.split('/')[1],
             "apikey": ALPHA_VANTAGE_API_KEY,
-            "outputsize": "full",  # 'full' will give all available data
+            "outputsize": "full",  
             "datatype": "json"
         }
         
@@ -290,11 +285,9 @@ async def fill_database(request: Request):
             if "Time Series FX (Daily)" in forex_data:
                 data = forex_data["Time Series FX (Daily)"]
 
-                # Establish DB connection to insert data
                 conn = get_db_connection()
                 cursor = conn.cursor()
                 try:
-                    # Loop through the forex data and insert it into the database
                     for date, values in data.items():
                         cursor.execute("""
                             INSERT INTO STOCK (stock_name, date, open_price, high_price, low_price, close_price, value)
@@ -321,7 +314,6 @@ async def fill_database(request: Request):
         else:
             logger.error(f"Failed to fetch data for {pair}: {response.status_code}")
 
-    # Return a message after filling the database
     return HTMLResponse(content="Database successfully filled with forex data!")
 
 def save_articles_to_db(articles):
@@ -347,7 +339,6 @@ def save_articles_to_db(articles):
     cursor.close()
     conn.close()
 
-
 @app.get("/fetch_news", response_class=HTMLResponse)
 async def fetch_news(request: Request):
     url = f"https://newsapi.org/v2/everything?q=currency&apiKey={NEWS_API_KEY}"
@@ -358,24 +349,43 @@ async def fetch_news(request: Request):
         save_articles_to_db(articles)
     return templates.TemplateResponse("news.html", {"request": request, "articles": articles})
 
+@app.get("/news", response_class=HTMLResponse)
+async def news(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
 
-@app.get("/notifications",response_class=HTMLResponse)
-async def notifications(request: Request):
-    return templates.TemplateResponse("notifications.html", {"request": request})
+    news_articles = fetch_news_for_currency(currency)
+
+    return templates.TemplateResponse("news.html", {
+        "request": request,
+        "currency": currency,
+        "news_articles": news_articles
+    })
 
 
-# Define the notification model
+@app.get("/trends", response_class=HTMLResponse)
+async def trends(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+    return templates.TemplateResponse("trends.html", {"request": request})
+
+@app.get("/converter", response_class=HTMLResponse)
+async def converter(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+    return templates.TemplateResponse("converter.html", {"request": request})
+
 class Notification(BaseModel):
     currency: str
     threshold: float
     user_id: int
     stock_id: int
 
+@app.get("/notifications",response_class=HTMLResponse)
+async def notifications(request: Request):
+    return templates.TemplateResponse("notifications.html", {"request": request})
+
 @app.post("/notifications", response_class=HTMLResponse)
 async def notifications_post(request: Request, notification: Notification):
     """Save a new notification in the database."""
     
-    # Validate input (e.g., check if threshold is a positive number)
     if notification.threshold <= 0:
         return templates.TemplateResponse("notifications.html", {"request": request, "Error_Message": "Threshold must be positive"})
     
@@ -398,82 +408,3 @@ async def notifications_post(request: Request, notification: Notification):
     finally:
         cursor.close()
         conn.close()
-
-
-# @celery_app.task
-# def check_and_send_notifications():
-#     """Check forex rates and send notifications for any thresholds that are exceeded."""
-#     conn = get_db_connection()
-#     cursor = conn.cursor(dictionary=True)
-    
-#     try:
-#         cursor.execute("""
-#             SELECT n.notification_id, n.threshold, n.user_id, n.stock_id, s.stock_name, s.value
-#             FROM NOTIFICATIONS n
-#             JOIN STOCK s ON n.stock_id = s.stock_id
-#         """)
-#         notifications = cursor.fetchall()
-        
-#         for notification in notifications:
-#             if notification['value'] >= notification['threshold']:
-#                 # Call your send_notification function to notify the user
-#                 send_notification(notification['user_id'], notification['stock_name'], notification['value'])
-#                 logger.info(f"Notification sent to user {notification['user_id']} for stock {notification['stock_name']}.")
-        
-#     except Exception as e:
-#         logger.error(f"Error checking notifications: {e}")
-#     finally:
-#         cursor.close()
-#         conn.close()
-        
-# @celery_app.task
-# def check_and_send_notifications():
-#     """Check forex rates and send notifications for any thresholds that are exceeded."""
-#     conn = get_db_connection()
-#     cursor = conn.cursor(dictionary=True)
-    
-#     try:
-#         cursor.execute("""
-#             SELECT n.notification_id, n.threshold, n.user_id, n.stock_id, s.stock_name, s.value
-#             FROM NOTIFICATIONS n
-#             JOIN STOCK s ON n.stock_id = s.stock_id
-#         """)
-#         notifications = cursor.fetchall()
-        
-#         for notification in notifications:
-#             if notification['value'] >= notification['threshold']:
-#                 # Call your send_notification function to notify the user
-#                 send_notification(notification['user_id'], notification['stock_name'], notification['value'])
-#                 logger.info(f"Notification sent to user {notification['user_id']} for stock {notification['stock_name']}.")
-        
-#     except Exception as e:
-#         logger.error(f"Error checking notifications: {e}")
-#     finally:
-#         cursor.close()
-#         conn.close()
-
-
-@app.get("/news", response_class=HTMLResponse)
-async def news(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
-
-    # Fetch all news and filter by the selected currency
-    news_articles = fetch_news_for_currency(currency)
-
-    # Render the dashboard page with the filtered news articles
-    return templates.TemplateResponse("news.html", {
-        "request": request,
-        "currency": currency,
-        "news_articles": news_articles  # Pass the filtered news articles to the template
-    })
-
-
-@app.get("/trends", response_class=HTMLResponse)
-async def trends(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
-    return templates.TemplateResponse("trends.html", {"request": request})
-
-@app.get("/converter", response_class=HTMLResponse)
-async def converter(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
-    return templates.TemplateResponse("converter.html", {"request": request})
