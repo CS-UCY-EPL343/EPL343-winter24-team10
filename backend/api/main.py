@@ -62,8 +62,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query"
 
-NEWS_API_KEY = os.getenv('NEWS_API_KEY')
-
+NEWS_API_KEY=os.getenv('NEWS_API_KEY')
 
 def get_db_connection():
     """Establish a connection to the database."""

@@ -486,6 +486,7 @@ def create_all_stored_procedures():
                     SET result = amount * exchange_rate;
                 END IF;
             END;
+<<<<<<< HEAD
             """,
             """ 
             CREATE PROCEDURE GetUserNotifications(
@@ -521,6 +522,8 @@ def create_all_stored_procedures():
                         DELETE FROM NOTIFICATIONS
                         WHERE notification_id = p_notification_id;
                     END;
+=======
+>>>>>>> f92386ca1c762dfdfb933ad59f5f054a25545e20
             """
         ]
 
@@ -542,4 +545,12 @@ def create_all_stored_procedures():
         if cursor:
             cursor.close()
         if connection:
+<<<<<<< HEAD
             connection.close()
+=======
+            connection.close()
+
+
+
+
+>>>>>>> f92386ca1c762dfdfb933ad59f5f054a25545e20
