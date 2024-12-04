@@ -8,16 +8,13 @@ from passlib.context import CryptContext
 from api.jwt_auth import create_access_token ,create_email_verification_token
 from api.dashboard import fetch_forex_data, plot_forex_data, fetch_news_for_currency
 from datetime import timedelta
-<<<<<<< HEAD
 from jobs.celery import send_notification
 from pydantic import BaseModel
 
 # from jobs.celery import celery_app
-=======
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email_validator import validate_email, EmailNotValidError
->>>>>>> 878e7b8b05f9e1fd92d51a18686bd6abdf3eccfd
 
 import os
 import jwt
@@ -146,25 +143,21 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
         # Create verification link
         verification_link = f"http://localhost:8000/verify_email?token={verification_token}"
         
-        # Send the verification email
-        email_body = f"""
-        <html>
-            <body>
-                <p>Hello {name},</p>
-                <p>Thank you for registering. Please click the link below to verify your email:</p>
-                <a href="{verification_link}">Verify Email</a>
-            </body>
-        </html>
-        """
+        email_body = templates.get_template("verification_email.html").render(
+            name=name,
+            verification_link=verification_link
+        )
+        # Send the email
         send_email(email, "Email Verification", email_body)
         
         return RedirectResponse(url="/login", status_code=303)
     except Exception as e:
         conn.rollback()
-        return {"Error_Message": "An error occurred while registering the user."}
+        return {"Error_Message": f"An error occurred while registering the user: {str(e)}"}
     finally:
         cursor.close()
         conn.close()
+
         
 SECRET_KEY='secret_key'
 ALGORITHM='HS256'
@@ -194,6 +187,12 @@ async def verify_email(request: Request, token: str):
 async def login_page(request: Request):
     """Render the login page."""
     return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/confirmation_verify", response_class=HTMLResponse)
+async def confirmation_verify(request: Request):
+    """Render the login page."""
+    return templates.TemplateResponse("confirmation_verify.html", {"request": request})
+
 
 
 @app.post("/login")
@@ -362,7 +361,6 @@ async def fetch_news(request: Request):
 
 @app.get("/notifications",response_class=HTMLResponse)
 async def notifications(request: Request):
-<<<<<<< HEAD
     return templates.TemplateResponse("notifications.html", {"request": request})
 
 
@@ -453,11 +451,29 @@ async def notifications_post(request: Request, notification: Notification):
 #     finally:
 #         cursor.close()
 #         conn.close()
-=======
-    """Render the password reset page."""
-    return templates.TemplateResponse("notifications.html", {"request": request})
+
 
 @app.get("/news", response_class=HTMLResponse)
-async def news(request: Request):
-    return templates.TemplateResponse("news.html", {"request": request})
->>>>>>> 878e7b8b05f9e1fd92d51a18686bd6abdf3eccfd
+async def news(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+
+    # Fetch all news and filter by the selected currency
+    news_articles = fetch_news_for_currency(currency)
+
+    # Render the dashboard page with the filtered news articles
+    return templates.TemplateResponse("news.html", {
+        "request": request,
+        "currency": currency,
+        "news_articles": news_articles  # Pass the filtered news articles to the template
+    })
+
+
+@app.get("/trends", response_class=HTMLResponse)
+async def trends(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+    return templates.TemplateResponse("trends.html", {"request": request})
+
+@app.get("/converter", response_class=HTMLResponse)
+async def converter(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+    return templates.TemplateResponse("converter.html", {"request": request})

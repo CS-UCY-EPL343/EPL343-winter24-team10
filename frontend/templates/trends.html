@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trends - Forex Deposit Dashboard</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="../static/css/trends.css">
+</head>
+<body id="kt_body" class="header header-fixed">
+    <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+        <!-- Header -->
+        <div id="kt_header" class="header header-fixed">
+            <div class="container d-flex align-items-stretch justify-content-between">
+                <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                    <a class="brand-logo" href="https://www.hfeu.com/en/" target="_blank" class="text-bold">
+                        <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width:250px;margin-top:3px;margin-left:-20px">
+                    </a>
+                    <div class="user-info" style="align-content: end;">
+                        <a href="/profile" class="user-link">
+                            <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon" style="width:30px;height:30px; margin-top:3px; margin-right: 90px;">
+                        </a>
+                        <span id="username">Username</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="kt_sidebar" class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="/" class="sidebar-link">Home</a></li>
+                <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
+                <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
+                <li class="sidebar-item"><a href="/trends" class="sidebar-link">Trends</a></li>
+                <li class="sidebar-item"><a href="/converter" class="sidebar-link">Currency Converter</a></li>
+            </ul>
+        </div>
+
+        <!-- Content Section -->
+        <div class="container" style="margin-left: 20%;"> 
+            <h1>Trends</h1>
+
+            <!-- Existing Button to Show Currency Prediction -->
+            <button class="show-button" onclick="toggleSections()">Show Currency Prediction</button>
+
+            <!-- New Button for Stored Procedure 1 (Stock Prediction) -->
+            <button class="show-button" onclick="fetchStockPrediction()">Get Stock Prediction</button>
+
+            <!-- New Button for Stored Procedure 2 (Stock Change) -->
+            <button class="show-button" onclick="toggleYearRangeSelector()">Get Stock Change</button>
+
+            <!-- Currency Pair Selection (Initially Hidden) -->
+            <div class="currency-selector hidden">
+                <label for="currency-pair">Select Currency:</label>
+                <select id="currency-pair" onchange="fetchPrediction()">
+                    <option value="USD/EUR">EUR</option>
+                    <option value="USD/GBP">GBP</option>
+                    <option value="USD/JPY">JPY</option>
+                    <option value="USD/AUD">AUD</option>
+                </select>
+            </div>
+
+            <!-- User Count Display (Initially Hidden) -->
+            <div class="user-count hidden">
+                <p id="prediction-message">Loading prediction...</p>
+            </div>
+
+            <!-- Year Range Selector for Stock Change -->
+            <div class="year-range-selector hidden">
+                <label for="start-year">Start Year:</label>
+                <input type="number" id="start-year" min="2000" max="2025" placeholder="Start Year">
+                <label for="end-year">End Year:</label>
+                <input type="number" id="end-year" min="2000" max="2025" placeholder="End Year">
+                <button class="show-button" onclick="fetchStockChange()">Get Stock Change</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Code -->
+    <script>
+        // Toggle visibility of the currency selector and user count
+        function toggleSections() {
+            const currencySelector = document.querySelector('.currency-selector');
+            const userCount = document.querySelector('.user-count');
+            const button = document.querySelector('.show-button');
+
+            // Toggle visibility
+            currencySelector.classList.toggle('hidden');
+            userCount.classList.toggle('hidden');
+
+            // Change button text
+            if (currencySelector.classList.contains('hidden')) {
+                button.textContent = 'Show Currency Prediction';
+            } else {
+                button.textContent = 'Hide Currency Prediction';
+            }
+        }
+
+        // Show or hide the year range selector for Stock Change
+        function toggleYearRangeSelector() {
+            const yearRangeSelector = document.querySelector('.year-range-selector');
+            yearRangeSelector.classList.toggle('hidden');
+        }
+
+        // Fetch stock prediction from the backend (using the first stored procedure)
+        function fetchStockPrediction() {
+            const selectedPair = 'USD/EUR';  // Use dynamic value if needed, e.g., from a select dropdown
+
+            fetch(`/getPrediction?stock_name=${selectedPair}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.prediction) {
+                        document.getElementById('prediction-message').innerText = data.prediction;
+                    } else {
+                        document.getElementById('prediction-message').innerText = "Prediction not available.";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching prediction:", error);
+                });
+        }
+
+        // Fetch stock change from the backend (using the second stored procedure)
+        function fetchStockChange() {
+            const startYear = document.getElementById('start-year').value;
+            const endYear = document.getElementById('end-year').value;
+
+            if (startYear && endYear) {
+                fetch(`/getStockChange?start_date=${startYear}&end_date=${endYear}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.change) {
+                            document.getElementById('prediction-message').innerText = `Stock change: ${data.change}`;
+                        } else {
+                            document.getElementById('prediction-message').innerText = "Change data not available.";
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching stock change:", error);
+                    });
+            } else {
+                alert("Please select a valid range of years.");
+            }
+        }
+    </script>
+</body>
+</html>
