@@ -5,7 +5,7 @@ requests
 redis
 sqlalchemy==2.0.36
 python-dotenv
-mysql-connector-python==8.4.0
+mysql-connector-python==9.1.0
 mariadb
 python-multipart
 pyjwt
