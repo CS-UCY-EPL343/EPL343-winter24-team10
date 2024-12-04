@@ -1,0 +1,185 @@
+/* General Body Styles */
+body {
+    background-color: whitesmoke; /* Light gray background */
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: row; /* Side by side layout */
+}
+
+/* Style for User Icon and Username */
+.user-info {
+    display: flex;
+    align-items: center;
+    color: white; /* White text for the username */
+    position: absolute;
+    top: 50%;
+    right: 60px;
+    transform: translateY(-50%); /* Vertically center the user info */
+}
+
+/* User Icon */
+.user-info .user-icon {
+    width: 30px; /* Adjust the icon size */
+    height: 30px;
+    border-radius: 50%; /* Makes the icon round */
+    margin-right: 10px; /* Space between icon and username */
+}
+
+/* Username Text */
+#usernameText {
+    font-size: 16px; /* Adjust the font size */
+    font-weight: bold; /* Makes the username text bold */
+    white-space: nowrap; /* Prevents the text from wrapping */
+    overflow: hidden; /* Ensures the text doesn't overflow */
+    text-overflow: ellipsis; /* Adds ellipsis if the text is too long */
+}
+
+
+/* Header Styles */
+#kt_header {
+    background-color: black; /* Black background */
+    color: white; /* Text in the header */
+    height: 80px; /* Fixed header height */
+    display: flex;
+    align-items: center;
+    padding: 0 21px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Full width */
+    position: fixed; /* Sticks the header to the top */
+    top: 0;
+    left: 0;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo img {
+    height: 50px; /* Adjust the logo size */
+}
+
+/* Sidebar Styles */
+#kt_sidebar {
+    background-color: black;
+    color: white;
+    width: 200px;
+    height: 100%;
+    position: fixed;
+    top: 80px; /* Below the header */
+    left: 0;
+    padding-top: 20px;
+}
+
+.sidebar-menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    margin: 15px 0;
+}
+
+.sidebar-item:nth-child(3) .sidebar-link {
+    background-color: rgb(165, 1, 1); /* Blue background for active item */
+    color: white; /* White text */
+    font-weight: bold; /* Bold text */
+}
+
+.sidebar-link {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    padding-left: 20px;
+    display: block;
+}
+
+.sidebar-link:hover {
+    background-color: #444;
+}
+
+/* Main Content Styles */
+#kt_content {
+    margin-left: 220px; /* Space for the sidebar */
+    padding: 20px;
+    width: calc(100% - 220px); /* Ensures the content takes the rest of the page width */
+    height: 100%;
+    overflow: auto;
+    box-sizing: border-box; /* Ensures padding doesn't cause overflow */
+    margin-top: 100px; /* Ensures space between the header and the table */
+}
+
+.input-field{
+    width: calc(33% - 10px); /* Ensure equal width for both */
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+#addNotificationBtn {
+    width: calc(33% - 10px); /* Ensure equal width for both */
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+/* Notification Table */
+.notification-table {
+    width: 100%; /* Full width of the container */
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+.notification-table th,
+.notification-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd; /* Line separating rows */
+}
+
+.notification-table th {
+    background-color: #f4f4f4;
+    text-align: center; /* Centers the header text */
+}
+
+.notification-table td {
+    border-right: 1px solid #ddd; /* Vertical line between columns */
+}
+
+.notification-table th, .notification-table td {
+    min-width: 120px; /* Ensures the table columns don't shrink too small */
+}
+
+/* Actions Column */
+.actions {
+    text-align: center;
+}
+
+.edit-btn, .delete-btn, .save-btn, .cancel-btn {
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.pencil-btn{
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: none;
+    background-color: whitesmoke;
+    color: rgb(0, 0, 0);
+    cursor: pointer;
+    border-radius: 5px;
+}

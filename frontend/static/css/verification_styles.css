@@ -1,0 +1,74 @@
+/* Header styles */
+#kt_header {
+    background-color: black; /* Black background */
+    color: white; /* Text in the header */
+    height: 80px; /* Fixed header height */
+    display: flex;
+    align-items: center;
+    padding: 0 21px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Full width */
+    position: fixed; /* Sticks the header to the top */
+    top: 0;
+    left: 0;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo img {
+    height: 50px; /* Adjust the logo size */
+}
+
+/* Main content styles */
+.main-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 80px); /* Full height minus the header */
+    margin-top: 80px; /* Adjust for fixed header */
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+/* Centered box styles */
+.centered-box {
+    background-color: #f9f9f9; /* Light gray background */
+    border: 1px solid #ddd; /* Border around the box */
+    border-radius: 8px; /* Rounded corners */
+    padding: 30px;
+    max-width: 600px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Heading style */
+.centered-box h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Paragraph style */
+.centered-box p {
+    margin: 10px 0;
+    color: #555;
+}
+
+/* Verify button style */
+.verify-button {
+    display: inline-block;
+    background-color: #28a745; /* Green background */
+    color: white; /* White text */
+    text-decoration: none; /* No underline */
+    font-size: 18px; /* Large text */
+    padding: 15px 30px; /* Spacious padding */
+    border-radius: 5px; /* Rounded button */
+    margin: 20px 0;
+    font-weight: bold; /* Bold text */
+}
+
+.verify-button:hover {
+    background-color: #218838; /* Darker green on hover */
+    cursor: pointer; /* Pointer cursor */
+}
