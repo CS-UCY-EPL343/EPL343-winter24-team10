@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/css/styles_rate.css">
+    <title>Trading Rates</title>
+</head>
+<body>
+<div class="wrapper" id="kt_wrapper">
+
+    <div id="kt_header" class="header">
+        <div class="container">
+            <div class="brand-logo">
+                <img src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width: 250px; margin-top:3px; margin-left:-20px">
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <a href="#forex" class="nav-item active" onclick="showTable('forex-table')">
+                <img src="/pictures/forexIcon.jpg" alt="Forex">
+                <span>Forex</span>
+            </a>
+            <a href="#commodities" class="nav-item" onclick="showTable('commodities-table')">
+                <img src="/pictures/commodities.png" alt="Commodities">
+                <span>Commodities</span>
+            </a>
+            <a href="#stocks" class="nav-item" onclick="showTable('stocks-table')">
+                <img src="/pictures/stocks.png" alt="Stocks">
+                <span>Stocks</span>
+            </a>
+        </div>
+
+        <!-- Rates Tables -->
+        <div class="rates-tables">
+            <!-- Forex Table -->
+            <div class="rates-table" id="forex-table">
+                <div class="table-header">
+                    <span>Markets</span>
+                    <span>Sell</span>
+                    <span>Buy</span>
+                </div>
+                <div class="table-row">
+                    <span>EURUSD</span>
+                    <span class="sell positive">1.04900</span>
+                    <span class="buy positive">1.04900</span>
+                </div>
+                <div class="table-row">
+                    <span>USDJPY</span>
+                    <span class="sell negative">149.536</span>
+                    <span class="buy negative">149.540</span>
+                </div>
+            </div>
+
+            <!-- Commodities Table -->
+            <div class="rates-table" id="commodities-table" style="display: none;">
+                <div class="table-header">
+                    <span>Markets</span>
+                    <span>Sell</span>
+                    <span>Buy</span>
+                </div>
+                <div class="table-row">
+                    <span>Gold</span>
+                    <span class="sell positive">1805.00</span>
+                    <span class="buy positive">1807.00</span>
+                </div>
+                <div class="table-row">
+                    <span>Silver</span>
+                    <span class="sell negative">22.50</span>
+                    <span class="buy negative">22.55</span>
+                </div>
+            </div>
+
+            <!-- Stocks Table -->
+            <div class="rates-table" id="stocks-table" style="display: none;">
+                <div class="table-header">
+                    <span>Markets</span>
+                    <span>Sell</span>
+                    <span>Buy</span>
+                </div>
+                <div class="table-row">
+                    <span>Apple</span>
+                    <span class="sell positive">150.00</span>
+                    <span class="buy positive">151.00</span>
+                </div>
+                <div class="table-row">
+                    <span>Google</span>
+                    <span class="sell negative">2800.00</span>
+                    <span class="buy negative">2805.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTable(tableId) {
+    // Hide all tables
+    const tables = document.querySelectorAll('.rates-table');
+    tables.forEach((table) => {
+        table.style.display = 'none';
+        table.classList.remove('active');
+    });
+
+    // Show the selected table
+    const selectedTable = document.getElementById(tableId);
+    if (selectedTable) {
+        selectedTable.style.display = 'block';
+        selectedTable.classList.add('active');
+    }
+
+    // Update active sidebar item
+    const sidebarItems = document.querySelectorAll('.nav-item');
+    sidebarItems.forEach((item) => {
+        item.classList.remove('active');
+    });
+
+    const activeNavItem = document.querySelector(`a[href="#${tableId.split('-')[0]}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+}
+
+</script>
+</body>
+</html>

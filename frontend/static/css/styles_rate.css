@@ -1,0 +1,161 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+}
+
+#kt_header {
+    background-color: black; /* Black background */
+    color: white; /* Text in the header */
+    height: 80px; /* Fixed header height */
+    display: flex;
+    align-items: center;
+    padding: 0 21px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Full width */
+    position: fixed; /* Sticks the header to the top */
+    top: 0;
+    left: 0;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo img {
+    height: 50px; /* Adjust the logo size */
+}
+
+
+
+/* Main Content Wrapper */
+.wrapper {
+    margin: auto; /* Center the login box */
+    max-width: 400px; /* Limit the login box width */
+    padding: 25px;
+    box-sizing: border-box;
+    margin-top: 120px; /* Push the login box further down */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Ensure the login box content is centered */
+}
+
+
+/* Container */
+.container {
+    display: flex;
+    align-items: flex-start;
+    margin: 20px;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 0;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 15px 0;
+    width: 100%;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.nav-item img {
+    width: 40px;
+    margin-bottom: 8px;
+}
+
+.nav-item span {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.nav-item:hover {
+    background-color: #f4f4f4;
+}
+
+.nav-item.active {
+    border-left: 4px solid red;
+    background-color: #f9f9f9;
+}
+
+/* Table visibility */
+#forex-table {
+    display: block; /* Show Forex table by default */
+}
+
+#commodities-table,
+#stocks-table {
+    display: none; /* Hide other tables by default */
+}
+
+/* Rates Table */
+.rates-table {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-left: 20px;
+    width: 100%;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+.rates-tables {
+    width: 100%;
+    margin-left: 20px;
+}
+
+.rates-table {
+    display: none; /* All tables hidden by default */
+}
+
+.rates-table.active {
+    display: block; /* Only the active table is shown */
+}
+
+
+.table-header,
+.table-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.table-header {
+    font-weight: bold;
+    background-color: #f7f7f7;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+.sell,
+.buy {
+    font-weight: bold;
+}
+
+.sell.positive,
+.buy.positive {
+    color: green;
+}
+
+.sell.negative,
+.buy.negative {
+    color: red;
+}

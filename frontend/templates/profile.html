@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard | View Profile</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/css/profile_styles.css">
+    <style>
+        /* Adjust the layout to center the user info card */
+        .content-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 80px); /* Full height minus the header */
+            padding-left: 200px; /* Account for sidebar width */
+        }
+
+        .card-custom {
+            width: 400px;
+        }
+    </style>
+</head>
+
+<body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
+    <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+
+        <!-- Header -->
+        <div id="kt_header" class="header header-fixed">
+            <div class="container d-flex align-items-stretch justify-content-between">
+                <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                    <a class="brand-logo" href="/" class="text-bold">
+                        <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width:250px;margin-top:3px;margin-left:-20px">
+                    </a>
+                </div>
+            </div>
+            <div class="user-info" style="align-content: end;">
+                <a href="/profile" class="user-link">
+                    <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon" style="width:30px;height:30px; margin-top:3px; margin: right 90px;">
+                </a>
+                <span id="username">Username</span> <!-- Replace 'Username' with dynamic content if needed -->
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="kt_sidebar" class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="/" class="sidebar-link">Home</a></li>
+                <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
+                <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
+                <li class="sidebar-item"><a href="/trends" class="sidebar-link">Trends</a></li>
+                <li class="sidebar-item"><a href="/news" class="sidebar-link">News</a></li>
+                <li class="sidebar-item"><a href="/converter" class="sidebar-link">Currency Converter</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- User Info Box -->
+            <div class="card card-custom">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h2 class="card-label">User Information</h2>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form action="#" method="post" id="userInfoForm">
+                        <div class="form-group">
+                            <label for="name"><strong>Name:</strong></label>
+                            <input type="text" id="name" name="name" value="John" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="surname"><strong>Surname:</strong></label>
+                            <input type="text" id="surname" name="surname" value="Doe" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="username"><strong>Username:</strong></label>
+                            <input type="text" id="username" name="username" value="johndoe123" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="email"><strong>Email:</strong></label>
+                            <input type="email" id="email" name="email" value="john.doe@example.com" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="password"><strong>Password:</strong></label>
+                            <div class="input-icon">
+                                <input type="password" id="password" name="password" value="password123" class="form-control" readonly>
+                                <span class="toggle-password" id="togglePassword" style="pointer-events: none; opacity: 0.5;">
+                                    <img src="/pictures/eye-regular.svg" id="eyeOpen" alt="Show Password">
+                                    <img src="/pictures/eye-slash-regular.svg" id="eyeClosed" alt="Hide Password" style="display: none;">
+                                </span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="modifyButton" class="btn btn-modify">Modify Info</button>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="logoutButton" class="btn btn-logout">Log Out</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const modifyButton = document.getElementById("modifyButton");
+        const logoutButton = document.getElementById("logoutButton");
+        const editableFields = document.querySelectorAll("#userInfoForm .form-control:not(#username):not(#email)");
+        const passwordField = document.getElementById("password");
+        const togglePassword = document.getElementById("togglePassword");
+        const eyeOpen = document.getElementById("eyeOpen");
+        const eyeClosed = document.getElementById("eyeClosed");
+
+        let isEditMode = false;
+
+        modifyButton.addEventListener("click", function () {
+            if (isEditMode) {
+                editableFields.forEach(field => field.setAttribute("readonly", true));
+
+                passwordField.setAttribute("type", "password");
+                eyeOpen.style.display = "block";
+                eyeClosed.style.display = "none";
+
+                togglePassword.style.pointerEvents = "none";
+                togglePassword.style.opacity = "0.5";
+
+                modifyButton.textContent = "Modify Info";
+                modifyButton.classList.remove("btn-save");
+                modifyButton.classList.add("btn-modify");
+                isEditMode = false;
+
+                alert("Changes have been saved!");
+            } else {
+                editableFields.forEach(field => field.removeAttribute("readonly"));
+
+                togglePassword.style.pointerEvents = "auto";
+                togglePassword.style.opacity = "1";
+
+                modifyButton.textContent = "Save Changes";
+                modifyButton.classList.remove("btn-modify");
+                modifyButton.classList.add("btn-save");
+                isEditMode = true;
+            }
+        });
+
+        logoutButton.addEventListener("click", function () {
+            window.location.href = "/login";
+        });
+
+        togglePassword.addEventListener("click", function () {
+            if (!isEditMode) return;
+
+            const isPassword = passwordField.getAttribute("type") === "password";
+            passwordField.setAttribute("type", isPassword ? "text" : "password");
+            eyeOpen.style.display = isPassword ? "none" : "block";
+            eyeClosed.style.display = isPassword ? "block" : "none";
+        });
+    </script>
+</body>
+</html>

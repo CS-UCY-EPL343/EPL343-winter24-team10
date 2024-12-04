@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Live Stock Market Notifications</title>
+    <link rel="icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="..static/css/notification_styles.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header">
+        <div class="container">
+            <div class="brand-logo">
+                <h1>Stock Tracker</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="wrapper">
+        <!-- Notifications Section -->
+        <div class="notifications">
+            <h2>Live Notifications</h2>
+            <ul id="notificationList">
+                <li>Loading notifications...</li>
+            </ul>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="profile">
+            <h2>User Profile</h2>
+            <div class="profile-card">
+                <img src="/images/profile-placeholder.png" alt="User Profile Picture" class="profile-picture">
+                <div class="profile-info">
+                    <p><strong>Name:</strong> John Doe</p>
+                    <p><strong>Email:</strong> john.doe@example.com</p>
+                    <p><strong>Account Type:</strong> Premium</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate fetching notifications
+        const notifications = [
+            { stock: "AAPL", price: "$157.40", change: "+0.85%" },
+            { stock: "GOOGL", price: "$2,783.00", change: "+1.15%" },
+            { stock: "TSLA", price: "$759.50", change: "-0.45%" },
+            { stock: "MSFT", price: "$317.45", change: "+0.60%" }
+        ];
+
+        const notificationList = document.getElementById('notificationList');
+        notificationList.innerHTML = ''; // Clear placeholder
+        notifications.forEach(notification => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `<strong>${notification.stock}</strong>: ${notification.price} (${notification.change})`;
+            listItem.classList.add(notification.change.includes('+') ? 'positive' : 'negative');
+            notificationList.appendChild(listItem);
+        });
+    </script>
+</body>
+</html>
