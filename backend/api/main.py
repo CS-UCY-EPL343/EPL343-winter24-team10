@@ -467,3 +467,13 @@ async def news(request: Request, currency: str = "USD"):
         "news_articles": news_articles  # Pass the filtered news articles to the template
     })
 
+
+@app.get("/trends", response_class=HTMLResponse)
+async def trends(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+    return templates.TemplateResponse("trends.html", {"request": request})
+
+@app.get("/converter", response_class=HTMLResponse)
+async def converter(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+    return templates.TemplateResponse("converter.html", {"request": request})
