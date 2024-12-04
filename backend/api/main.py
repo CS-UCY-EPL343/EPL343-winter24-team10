@@ -361,7 +361,6 @@ async def fetch_news(request: Request):
 
 @app.get("/notifications",response_class=HTMLResponse)
 async def notifications(request: Request):
-<<<<<<< HEAD
     return templates.TemplateResponse("notifications.html", {"request": request})
 
 
@@ -452,11 +451,19 @@ async def notifications_post(request: Request, notification: Notification):
 #     finally:
 #         cursor.close()
 #         conn.close()
-=======
-    """Render the password reset page."""
-    return templates.TemplateResponse("notifications.html", {"request": request})
+
 
 @app.get("/news", response_class=HTMLResponse)
-async def news(request: Request):
-    return templates.TemplateResponse("news.html", {"request": request})
->>>>>>> 878e7b8b05f9e1fd92d51a18686bd6abdf3eccfd
+async def news(request: Request, currency: str = "USD"):
+    """Fetch and display forex data and related news for a given currency."""
+
+    # Fetch all news and filter by the selected currency
+    news_articles = fetch_news_for_currency(currency)
+
+    # Render the dashboard page with the filtered news articles
+    return templates.TemplateResponse("news.html", {
+        "request": request,
+        "currency": currency,
+        "news_articles": news_articles  # Pass the filtered news articles to the template
+    })
+
