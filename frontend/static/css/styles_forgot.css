@@ -1,0 +1,128 @@
+body {
+    background-color: #f5f5f5; /* Light gray background */
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Styles */
+.header {
+    background-color: black; /* Black background */
+    color: white; /* Text in the header */
+    height: 80px; /* Fixed header height */
+    display: flex;
+    align-items: center;
+    padding: 0 21px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Full width */
+    position: fixed; /* Sticks the header to the top */
+    top: 0;
+    left: 0;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo img {
+    height: 50px; /* Adjust the logo size */
+}
+
+
+.header .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Wrapper Styles */
+.wrapper {
+    margin: auto; /* Center the login box */
+    max-width: 400px; /* Limit the login box width */
+    padding: 25px;
+    box-sizing: border-box;
+    margin-top: 140px; /* Push the login box further down */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Ensure the login box content is centered */
+}
+
+/* Card Styles */
+.card {
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+.card-header {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+    color: #000000;
+}
+
+.card-body {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    border: none;
+    border-radius: 4px;
+    background-color:green;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: darkgreen;
+}
+
+.card-footer {
+    text-align: center;
+}
+
+.card-footer a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.card-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Success Message */
+.success-message {
+    color: green;
+    font-weight: bold;
+    text-align: center;
+}
