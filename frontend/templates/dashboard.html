@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="../static/css/dashboard_styles.css">
+    <title>Forex Dashboard</title>
+</head>
+<body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
+
+    <!-- Header Section -->
+    <div id="kt_header" class="header header-fixed">
+        <div class="container d-flex align-items-stretch justify-content-between">
+            <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                <a class="brand-logo" href="https://www.hfm.com/hf/en/" target="_blank">
+                    <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width:250px;margin-top:3px;margin-left:-20px">
+                </a>
+            </div>
+            <div class="d-flex align-items-center flex-wrap mr-2">
+                <!-- User Info Section -->
+                <div class="user-info" style="align-content: end;">
+                    <a href="/profile" class="user-link">
+                        <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon" style="width:30px;height:30px; margin-top:3px; margin-right: 10px;">
+                    </a>
+                    <span id="username">{{ Username }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Section -->
+    <div id="kt_sidebar" class="sidebar">
+        <ul class="sidebar-menu">
+            <li class="sidebar-item"><a href="/" class="sidebar-link">Home</a></li>
+            <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
+            <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
+            <li class="sidebar-item"><a href="/trends" class="sidebar-link">Trends</a></li>
+            <li class="sidebar-item"><a href="/news" class="sidebar-link">News</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="wrapper">
+        <h1>Forex Dashboard</h1>
+        <!-- Currency Selection Form -->
+        <form method="post" action="/dashboard">
+            <label for="currency2">Target Currency:</label>
+            <select id="currency2" name="currency2" required>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="JPY">JPY</option>
+                <option value="AUD">AUD</option>
+                <option value="CAD">CAD</option>
+                <option value="CHF">CHF</option>
+                <option value="NZD">NZD</option>
+            </select>
+
+            <button type="submit">Generate Graph</button>
+        </form>
+
+        <!-- Graph Container -->
+        <div id="graph-container">
+            {% if graph_data %}
+                <div id="plotly-graph"></div>
+                <script>
+                    const graphData = {{ graph_data|safe }};
+                    
+                    graphData.data[0].line = { color: "green", width: 2 }; // Green line for the graph
+                    graphData.data[0].marker = { size: 6, color: "red" };  // Small red dots
+
+                    const lineLayout = {
+                        title: `Exchange Rate: USD to {{ currency2 }}`,
+                        paper_bgcolor: "black",
+                        plot_bgcolor: "black",
+                        font: { color: "white" },
+                        xaxis: { title: "Time", gridcolor: "#333" },
+                        yaxis: { title: "Exchange Rate", gridcolor: "#333" },
+                        hovermode: 'closest',
+                        dragmode: 'zoom',
+                    };
+
+                    Plotly.newPlot("plotly-graph", graphData.data, lineLayout);
+                </script>
+            {% else %}
+                <p>Select Currency to Display Graph.</p>
+            {% endif %}
+        </div>
+
+        {% if error_message %}
+            <p class="error-message">{{ error_message }}</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>

@@ -1,3 +1,4 @@
+version: "3.8"
 services:
   backend:
     build:
@@ -7,6 +8,67 @@ services:
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ../backend:/app/backend
-      - ../frontend:/app/frontend 
+      - ../frontend:/app/frontend
     ports:
       - "8000:8000"
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: myuser
+      DB_PASSWORD: mypassword
+      DB_NAME: mydatabase
+      RABBITMQ_HOST: rabbitmq
+      REDIS_HOST: redis
+      PYTHONPATH: /app  # This ensures that Python can locate both backend and jobs directories
+    depends_on:
+      - mariadb
+      - rabbitmq
+      - redis
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: mydatabase
+      MARIADB_USER: myuser
+      MARIADB_PASSWORD: mypassword
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"  # RabbitMQ Management UI
+      - "5672:5672"    # RabbitMQ default port
+
+  redis:
+    image: "redis:latest"
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  celery:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile  # Using the same Dockerfile for FastAPI and Celery
+    container_name: celery_worker
+    command: celery -A jobs.celery worker --loglevel=info  # Adjusted to refer to the correct module path
+    depends_on:
+      - rabbitmq
+      - redis
+      - mariadb
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: myuser
+      DB_PASSWORD: mypassword
+      DB_NAME: mydatabase
+      RABBITMQ_HOST: rabbitmq
+      REDIS_HOST: redis
+      PYTHONPATH: /app  # Same adjustment for Celery to find the jobs module
+volumes:
+  mariadb_data:

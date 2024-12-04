@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <title> Dashboard | Login </title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+        <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+        <link rel="stylesheet" href="../static/css/styles.css">
+
+
+    </head>
+    
+    <body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
+        <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+
+            <div id="kt_header" class="header header-fixed">
+
+                <div class="container d-flex align-items-stretch justify-content-between">
+
+                    <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                        <!--Stefanos-->
+                        <a class="brand-logo" href="https://www.hfm.com/hf/en/" target="_blank" class="text-bold">
+                            <!--Stefanos-->
+                            <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width:250px;margin-top:3px;margin-left:-20px">
+                        </a>
+
+                    </div>
+                    <div class="d-flex align-items-center flex-wrap mr-2">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="content s-results ar-reverse pb-3 mt-10">
+
+                <div id="loginDetails" style="max-width:450px; margin-left:auto; margin-right:auto;">
+                     <!-- Error Message Section -->
+                    <div id="errorMessage" class="error" style="display: none; color: red; font-weight: bold; text-align: center; margin-bottom: 15px;">
+                        Incorrect E-mail or Password
+                    </div>
+                    <div class="row mt-10">
+                        <div class="col-md-12">
+                            <div class="card card-custom py-5" style="border: 1px solid #e7e2e2;">
+                                <div class="card-header border-0" style="min-height: 70px">
+                                    <div class="card-title">
+                                        <h2 class="card-label">Sign In</h2>
+                                    </div>
+                                </div>
+                                <div class="card-body pt-0">
+    
+                                    <!-- Form begins here -->
+                                    <form action="/login" method="post">
+                                        <div class="form-group">
+                                            <label for="email">
+                                                <b>
+                                                    E-mail address:
+                                                </b>
+                                            </label>
+                                            <input type="email" id="email" name="email" placeholder="Email" class="form-control required-field" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="password" class="password-label">
+                                                    Password:
+                                                <a href="/forgot_password" class="forgot-password">
+                                                    Forgot password?
+                                                </a>
+                                            </label> 
+    
+                                            <div class="password-container" style="position: relative;">
+                                                <input type="password" id="password" name="password" placeholder="Password" class="form-control" required>
+                                                <span class="eye-icon" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                                                    <img src="/pictures/eye-regular.svg" id="eyeOpen" alt="Show Password" style="width: 20px; display: block;">
+                                                    <img src="/pictures/eye-slash-regular.svg" id="eyeClosed" alt="Hide Password" style="width: 20px; display: none;">                                                
+                                                </span>
+                                                                                       
+                                                {% if Error_Message %}
+                                                <b style="color: red; font-size: 12px;">{{ Error_Message }}</b>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+    
+                                        <div class="col-12">
+                                            <button name="login" id="submit_btn" type="submit" style="height: 40px;" class="py-3 h-auto full-width btn-lg btn btn-success w-100"> 
+                                                Sign In 
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="card-footer d-flex justify-content-between border-0 pt-4">
+                                    <h6 class="m-0">
+                                        Not Register yet?
+                                        <a href="/register" class="text-bold">
+                                            <b>
+                                                Register Here
+                                            </b>
+                                        </a>
+                                    </h6>
+                                </div>
+                            </div>
+    
+                        </div>
+                    </div>
+                </div>
+    
+            </div>
+        </div>
+    
+        <script>
+            const loginForm = document.getElementById('loginForm');
+            const errorMessage = document.getElementById('errorMessage');
+            const passwordField = document.getElementById('password');
+            const togglePassword = document.getElementById('togglePassword');
+            const eyeOpen = document.getElementById('eyeOpen');
+            const eyeClosed = document.getElementById('eyeClosed');
+
+            const correctEmail = "user@example.com";
+            const correctPassword = "123456";
+        
+            togglePassword.addEventListener('click', function () {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                eyeOpen.style.display = type === 'password' ? 'block' : 'none';
+                eyeClosed.style.display = type === 'password' ? 'none' : 'block';
+            });
+
+            loginForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = passwordField.value;
+                if (email === correctEmail && password === correctPassword) {
+                    alert("Login successful!");
+                } else {
+                    errorMessage.style.display = "block";
+                }
+            });
+
+        </script>
+        
+    </body>
+
+    
+    </html> 

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard | Register</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="../static/css/styles_refined.css">
+</head>
+
+<body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
+
+    <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
+
+        <div id="kt_header" class="header header-fixed">
+            <div class="container d-flex align-items-stretch justify-content-between">
+                <div class="brand flex-column-auto" id="kt_brand" style="padding: 0!important;">
+                    <!-- STEPHANOS -->
+                    <a class="brand-logo" href="https://www.hfm.com/hf/en/">
+                        <!-- STEPHANOS -->
+                        <img class="shrink-logo" src="/pictures/hfmarkets_logo.svg" alt="HFM" style="width: 250px; margin-top:3px; margin-left:-20px">
+                    </a>
+                </div>
+                <div class="d-flex align-items-center flex-wrap mr-2"></div>
+            </div>
+        </div>
+
+        <div class="content s-results ar-reverse pb-3 mt-10">
+            <div id="loginDetails" style="max-width:450px; margin-left:auto; margin-right:auto;">
+                <div class="row mt-10">
+                    <div class="col-md-12">
+                        <div class="card card-custom py-5" style="border: 1px solid #ebebeb;">
+                            <div class="card-header border-0" style="min-height: 70px">
+                                <div class="card-title">
+                                    <h2 class="card-label">Create an account</h2>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
+                                <form id="registrationForm" action="/register" method="post">
+
+
+                                    <div class="form-group">
+                                        <label for="name"><b>Name</b></label>
+                                        <input type="text" id="name" name="name" placeholder="Name" class="form-control required-field" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="surname"><b>Surname</b></label>
+                                        <input type="text" id="surname" name="surname" placeholder="Surname" class="form-control required-field" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="email"><b>Email</b></label>
+                                        <input type="email" id="email" name="email" placeholder="Email" class="form-control required-field" required>
+                                       
+                                        {% if Error_Message %}
+                                        <b style="color: red; font-size: 12px;">{{ Error_Message }}</b>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="password"><b>Password</b></label>
+                                        <div class="input-icon">
+                                            <input type="password" name="password" id="password" placeholder="Password" class="form-control pl-4 required-field" autocomplete="off" required>
+                                            <span class="eye-icon" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                                                <img src="/pictures/eye-regular.svg" id="eyeOpen" alt="Show Password" style="width: 20px; display: block;">
+                                                <img src="/pictures/eye-slash-regular.svg" id="eyeClosed" alt="Hide Password" style="width: 20px; display: none;">                                                
+                                            </span>
+                                        </div>
+                                        <span id="passwordError" class="error-message"></span>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <button name="register" id="submit_btn" type="submit" style="height: 40px;" class="py-3 h-auto full-width btn-lg btn btn-success w-100"> Register </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between border-0 pt-4">
+                                <div class="card-footer d-flex justify-content-between border-0 pt-4">
+                                    <h6 class="m-0">Already have an account?
+                                        <a href="/login" class="text-bold"><b>Sign In Here</b></a>
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const passwordField = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeOpen = document.getElementById('eyeOpen');
+        const eyeClosed = document.getElementById('eyeClosed');
+
+        togglePassword.addEventListener('click', function () {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            eyeOpen.style.display = type === 'password' ? 'block' : 'none';
+            eyeClosed.style.display = type === 'password' ? 'none' : 'block';
+        });
+
+    </script>
+
+    <script>
+        document.getElementById("registrationForm").addEventListener("submit", function (event) {
+            const password = document.getElementById("password").value;
+            const passwordError = document.getElementById("passwordError");
+    
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/;
+    
+            if (!passwordRegex.test(password)) {
+                event.preventDefault(); 
+                passwordError.textContent = "Password must be 8-15 characters long, contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+            } else {
+                passwordError.textContent = ""; 
+            }
+        });
+    </script>
+
+</body>
+</html>
