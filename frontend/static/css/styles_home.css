@@ -1,0 +1,157 @@
+body {
+    background-color: rgb(255, 255, 255);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden; /* Αποτρέπει το οριζόντιο scroll */
+}
+
+/* Style for User Icon and Username */
+.user-info {
+    display: flex;
+    align-items: center;
+    color: white; /* White text for the username */
+    position: absolute;
+    top: 50%;
+    right: 60px;
+    transform: translateY(-50%); /* Vertically center the user info */
+}
+
+/* User Icon */
+.user-info .user-icon {
+    width: 30px; /* Adjust the icon size */
+    height: 30px;
+    border-radius: 50%; /* Makes the icon round */
+    margin-right: 10px; /* Space between icon and username */
+}
+
+/* Username Text */
+#usernameText {
+    font-size: 16px; /* Adjust the font size */
+    font-weight: bold; /* Makes the username text bold */
+    white-space: nowrap; /* Prevents the text from wrapping */
+    overflow: hidden; /* Ensures the text doesn't overflow */
+    text-overflow: ellipsis; /* Adds ellipsis if the text is too long */
+}
+
+/* Header Styles */
+#kt_header {
+    background-color: black; /* Black background */
+    color: white; /* Text in the header */
+    height: 80px; /* Fixed header height */
+    display: flex;
+    align-items: center;
+    padding: 0 21px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Full width */
+    position: fixed; /* Sticks the header to the top */
+    top: 0;
+    left: 0;
+}
+
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo img {
+    height: 50px; /* Adjust the logo size */
+}
+
+#kt_sidebar {
+    background-color: black;
+    color: white;
+    width: 200px;
+    height: 100%;
+    position: fixed;
+    top: 80px; /* Below the header */
+    left: 0;
+    padding-top: 20px;
+}
+
+.sidebar-menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    margin: 15px 0;
+}
+
+.sidebar-item:nth-child(1) .sidebar-link {
+    background-color: rgb(165, 1, 1);
+    color: #fff;
+    font-weight: bold;
+}
+
+.sidebar-link {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    padding-left: 20px;
+    display: block;
+}
+
+.sidebar-link:hover {
+    background-color: #444;
+}
+
+/* General styles */
+.content {
+    margin-top: 80px; /* Push content below the fixed header */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0;
+}
+
+.cont {
+    margin-top: 300px; /* Space below the image */
+    padding: 20px;
+    margin-bottom: auto;
+    margin-left: 165px;
+}
+
+.cont h1 {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.cont .highlight {
+    color: rgb(190, 14, 14);
+}
+
+.cont p {
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.cont footer{
+    margin-top:1000px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1868px) {
+    .header-image {
+        width: 100%; /* Ensure full width on smaller screens */
+        max-width: 100%; /* Remove maximum width */
+        margin-top: 0; /* Avoid overlap */
+    }
+
+    .cont {
+        padding: 10px;
+    }
+
+    .cont h1 {
+        font-size: 28px;
+    }
+
+    .cont p {
+        font-size: 16px;
+    }
+}
