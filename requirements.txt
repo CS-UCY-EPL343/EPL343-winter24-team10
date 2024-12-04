@@ -16,3 +16,6 @@ plotly
 pyotp
 nano
 pandas
+python-jose
+email-validator
+jwt
