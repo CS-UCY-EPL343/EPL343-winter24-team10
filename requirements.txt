@@ -24,3 +24,5 @@ flower
 python-jose
 email-validator
 jwt
+django-celery-beat
+mysqlclient
