@@ -41,7 +41,6 @@ def send_email(to_email: str, subject: str, body: str):
         print("Email sent successfully")
     except Exception as e:
         print(f"Error sending email: {e}")
-
 @shared_task
 def check_notifications():
     """Check thresholds and send notifications if conditions are met."""
@@ -78,6 +77,7 @@ def check_notifications():
             threshold = notification['threshold']
             email = notification['email']
             username = notification['username']
+            notification_id = notification['notification_id']
 
             if close_price >= threshold:
                 # Send email
@@ -93,8 +93,18 @@ def check_notifications():
                 """
                 send_email(email, subject, body)
 
+                try:
+                    cursor.callproc("DeleteNotification", [notification_id])
+                    conn.commit()  # Commit the transaction to delete the notification
+                except Exception as e:
+                    print(f"Error deleting notification {notification_id}: {e}")
+                    conn.rollback()  # Rollback if an error occurred
+                else:
+                    print(f"Notification {notification_id} deleted successfully")
+
     except Exception as e:
         print(f"Error checking notifications: {e}")
     finally:
         cursor.close()
         conn.close()
+
