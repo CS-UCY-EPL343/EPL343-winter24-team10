@@ -10,7 +10,6 @@ app = Celery(
     backend=f'redis://{os.getenv("REDIS_HOST")}:6379/0'  # Redis connection string for task results
 )
 
-# Function to connect to MySQL database
 def get_db_connection():
     """Establish a connection to the database."""
     return mysql.connector.connect(
@@ -23,16 +22,13 @@ def get_db_connection():
         collation="utf8mb4_general_ci",
     )
 
-# Celery task to send notifications
 @app.task
 def send_notification(user_id, stock_id, threshold):
     """Send notification for price threshold breach."""
-    # Establish connection to the database
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
-        # Get the latest record for the specified stock_id
         cursor.execute("""
             SELECT stock_name, close_price, date FROM STOCK 
             WHERE stock_id = %s ORDER BY date DESC LIMIT 1
@@ -41,14 +37,11 @@ def send_notification(user_id, stock_id, threshold):
         
         if result:
             stock_name, close_price, date = result
-            # Check if the latest close price is above the threshold
             if close_price >= threshold:
                 message = f"Stock {stock_name} has breached your threshold of {threshold}. Current price: {close_price} on {date}."
                 
-                # Here, you can implement your notification logic (e.g., email, push notification)
                 print(f"Sending notification: {message}")
-                
-                # Optionally, log the notification in the database or send an email
+
                 cursor.execute("""
                     INSERT INTO NOTIFICATIONS (user_id, stock_id, threshold, message, date_sent) 
                     VALUES (%s, %s, %s, %s, %s)
