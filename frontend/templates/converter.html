@@ -23,7 +23,7 @@
                 <a href="/profile" class="user-link">
                     <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon"style="width:30px;height:30px; margin-top:3px; margin: right 90px;">
                 </a>
-                <span id="username">Username</span> <!-- Replace 'Username' with dynamic content if needed -->
+                <span id="username">{{ username }}</span> <!-- Replace 'Username' with dynamic content if needed -->
             </div>
         </div>
     </div>
@@ -31,10 +31,11 @@
     <!-- Sidebar -->
     <div id="kt_sidebar" class="sidebar">
         <ul class="sidebar-menu">
-            <li class="sidebar-item"><a href="/" class="sidebar-link">Home</a></li>
+            <li class="sidebar-item"><a href="/home" class="sidebar-link">Home</a></li>
             <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
             <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
-            <li class="sidebar-item"><a href="/frontend/templates/trends.html" class="sidebar-link">Trends</a></li>
+            <li class="sidebar-item"><a href="/trends" class="sidebar-link">Trends</a></li>
+            <li class="sidebar-item"><a href="/news" class="sidebar-link">News</a></li>
             <li class="sidebar-item"><a href="/converter" class="sidebar-link">Currency Converter</a></li>
         </ul>
     </div>

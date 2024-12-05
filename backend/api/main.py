@@ -221,7 +221,7 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
                 access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
                 
                 # Redirect and set access token in cookie
-                response = RedirectResponse(url="/dashboard", status_code=303)
+                response = RedirectResponse(url="/home", status_code=303)
                 response.set_cookie("access_token", access_token, httponly=True, secure=True, max_age=1800)
                 return response
         return templates.TemplateResponse("login.html", {"request": request, "Error_Message": "Incorrect Email or Password"})
@@ -234,27 +234,61 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+async def dashboard(request: Request, user_id: int = Depends(get_current_user)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT username
+    FROM USER WHERE user_id = %s""", (user_id,))
+    result = cursor.fetchone()
+    username = result[0] if result else "Guest"
+
+    cursor.close()
+    conn.close()
+    
+    return templates.TemplateResponse("dashboard.html", {"request": request, "username": username})
 
 @app.post("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request, currency2: str = Form(...)):
+async def dashboard(request: Request, currency2: str = Form(...), user_id: int = Depends(get_current_user)):
     currency1 = "USD" 
     start_date = "2014-11-07" 
     end_date = datetime.today()
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
+    cursor.execute("""
+    SELECT username
+    FROM USER WHERE user_id = %s""", (user_id,))
+    result = cursor.fetchone()
+    username = result[0] if result else "Guest"
+
+    cursor.close()
+    conn.close()
+    
     forex_data = fetch_forex_data(currency1, currency2, start_date, end_date.strftime('%Y-%m-%d'))
 
     graph_data = plot_forex_data(forex_data, currency1, currency2)
 
     if graph_data is None:
         error_message = "No data available for the selected currencies and date range."
-        return templates.TemplateResponse("dashboard.html", {"request": request, "error_message": error_message})
+        return templates.TemplateResponse(
+            "dashboard.html", 
+            {"request": request, "error_message": error_message, "username": username}
+        )
 
     return templates.TemplateResponse(
         "dashboard.html", 
-        {"request": request, "graph_data": graph_data, "currency1": currency1, "currency2": currency2}
+        {
+            "request": request, 
+            "graph_data": graph_data, 
+            "currency1": currency1, 
+            "currency2": currency2, 
+            "username": username
+        }
     )
+
 
 @app.get("/forgot_password", response_class=HTMLResponse)
 async def forgot_password(request: Request):
@@ -354,27 +388,36 @@ async def fetch_news(request: Request):
     return templates.TemplateResponse("news.html", {"request": request, "articles": articles})
 
 @app.get("/news", response_class=HTMLResponse)
-async def news(request: Request, currency: str = "USD"):
-    """Fetch and display forex data and related news for a given currency."""
+async def news(request: Request, currency: str = "USD", user_id: int = Depends(get_current_user)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT username
+    FROM USER WHERE user_id = %s""", (user_id,))
+    result = cursor.fetchone()
+    username = result[0] if result else "Guest"
+
+    cursor.close()
+    conn.close()
 
     news_articles = fetch_news_for_currency(currency)
 
     return templates.TemplateResponse("news.html", {
         "request": request,
         "currency": currency,
-        "news_articles": news_articles
+        "news_articles": news_articles,
+        "username": username
     })
 
 @app.get("/notifications", response_class=HTMLResponse)
 async def notifications(request: Request, user_id: int = Depends(get_current_user)):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)  # Use dictionary to fetch results as key-value pairs
+    cursor = conn.cursor(dictionary=True)  
     
     try:
-        # Call the stored procedure GetUserNotifications to fetch notifications for the user
         cursor.callproc('GetUserNotifications', (user_id,))
         
-        # Fetch the result set after executing the procedure
         cursor.execute("SELECT n.notification_id, n.threshold, n.date_created, s.stock_name, s.close_price AS latest_price "
                        "FROM NOTIFICATIONS n "
                        "JOIN STOCK s ON n.stock_id = s.stock_id "
@@ -382,11 +425,23 @@ async def notifications(request: Request, user_id: int = Depends(get_current_use
         
         notifications = cursor.fetchall()
         
-        # Pass the notifications to the template
+        cursor.close()
+        conn.close()
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        SELECT username
+        FROM USER WHERE user_id = %s""", (user_id,))
+        result = cursor.fetchone()
+        username = result[0] if result else "Guest"
+        
         return templates.TemplateResponse("notifications.html", {
             "request": request, 
             "notifications": notifications,
-            "user_id": user_id  # Pass user_id to the template
+            "user_id": user_id,
+            'username': username
         })
     
     except mysql.connector.Error as e:
@@ -515,9 +570,20 @@ async def delete_notification(request: Request, notification_id: int, user_id: i
         conn.close()
         
 @app.get("/trends", response_class=HTMLResponse)
-async def trends(request: Request):
-    """Serve the trends page."""
-    return templates.TemplateResponse("trends.html", {"request": request})
+async def trends(request: Request, user_id: int = Depends(get_current_user)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT username
+    FROM USER WHERE user_id = %s""", (user_id,))
+    result = cursor.fetchone()
+    username = result[0] if result else "Guest"
+
+    cursor.close()
+    conn.close()
+    
+    return templates.TemplateResponse("trends.html", {"request": request, "username": username})
 
 @app.post("/trends", response_class=HTMLResponse)
 async def handle_trends_form(request: Request):
@@ -537,7 +603,6 @@ async def handle_trends_form(request: Request):
 
     return {"message": "Action not recognized"}
 
-# Endpoint to get stock prediction by name
 async def get_stock_prediction(stock_name: str):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -680,4 +745,34 @@ async def change_password(request: Request,
 
 @app.get("/home", response_class=HTMLResponse)
 async def home(request: Request, user_id: int = Depends(get_current_user)):
-    return templates.TemplateResponse("home.html", {"request": request})
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT username
+    FROM USER WHERE user_id = %s""", (user_id,))
+    result = cursor.fetchone()
+    username = result[0] if result else "Guest"
+
+    cursor.close()
+    conn.close()
+    
+    return templates.TemplateResponse("home.html", {"request": request, "username":username})
+
+@app.get("/converter", response_class=HTMLResponse)
+async def converter(request: Request, user_id: int = Depends(get_current_user)):
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT username
+    FROM USER WHERE user_id = %s""", (user_id,))
+    result = cursor.fetchone()
+    username = result[0] if result else "Guest"
+
+    cursor.close()
+    conn.close()
+    
+    return templates.TemplateResponse("converter.html", {"request": request, "username":username})

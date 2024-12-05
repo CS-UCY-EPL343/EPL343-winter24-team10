@@ -58,7 +58,7 @@ body {
 #kt_sidebar {
     background-color: black;
     color: white;
-    width: 15%; /* Responsive sidebar width */
+    width: 10%; /* Responsive sidebar width */
     height: calc(100vh - 10vh); /* Full height minus header */
     position: fixed;
     top: 10vh; /* Below the header */
