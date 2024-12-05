@@ -592,3 +592,8 @@ async def change_password(request: Request,
     finally:
         cursor.close()
         conn.close()
+
+
+@app.get("/home", response_class=HTMLResponse)
+async def home(request: Request, user_id: int = Depends(get_current_user)):
+    return templates.TemplateResponse("home.html", {"request": request})

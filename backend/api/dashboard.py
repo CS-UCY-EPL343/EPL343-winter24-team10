@@ -29,13 +29,16 @@ def get_db_connection():
             port=os.getenv("DB_PORT", 3306),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
+            database=os.getenv("DB_NAME"),
+            charset="utf8mb4",  # Force utf8mb4 for compatibility
+            collation="utf8mb4_general_ci"  # Use a compatible collation
         )
         logger.info("Successfully connected to the database.")
         return conn
     except mysql.connector.Error as err:
         logger.error(f"Error connecting to database: {err}")
         raise
+
 
 def fetch_forex_data(currency1, currency2, start_date, end_date):
     """
