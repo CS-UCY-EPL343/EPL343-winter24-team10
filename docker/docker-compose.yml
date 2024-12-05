@@ -19,7 +19,7 @@ services:
       DB_NAME: mydatabase
       RABBITMQ_HOST: rabbitmq
       REDIS_HOST: redis
-      PYTHONPATH: /app  # This ensures that Python can locate both backend and jobs directories
+      PYTHONPATH: /app
     depends_on:
       - mariadb
       - rabbitmq
@@ -54,9 +54,9 @@ services:
   celery:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile  # Using the same Dockerfile for FastAPI and Celery
+      dockerfile: ./docker/Dockerfile
     container_name: celery_worker
-    command: celery -A jobs.celery worker --loglevel=info  # Adjusted to refer to the correct module path
+    command: celery -A backend.celery_main worker --loglevel=info
     depends_on:
       - rabbitmq
       - redis
@@ -69,6 +69,30 @@ services:
       DB_NAME: mydatabase
       RABBITMQ_HOST: rabbitmq
       REDIS_HOST: redis
-      PYTHONPATH: /app  # Same adjustment for Celery to find the jobs module
+      PYTHONPATH: /app
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
+  celery_beat:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    container_name: celery_beat
+    command: celery -A backend.celery_main beat --loglevel=info
+    depends_on:
+      - rabbitmq
+      - redis
+      - mariadb
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: myuser
+      DB_PASSWORD: mypassword
+      DB_NAME: mydatabase
+      RABBITMQ_HOST: rabbitmq
+      REDIS_HOST: redis
+      PYTHONPATH: /app
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
 volumes:
   mariadb_data:
