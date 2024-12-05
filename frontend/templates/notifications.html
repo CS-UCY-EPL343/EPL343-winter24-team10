@@ -1,73 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Notifications</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/css/styles.css">
+    <title>Notifications</title>
+    <link rel="shortcut icon" href="/pictures/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../static/css/notifications_style.css">
 </head>
-<body>
-    <div>
-        <h2>Your Notifications</h2>
+<body id="kt_body" class="header-fixed header-mobile-fixed subheader-enabled myhf_before_login hfsv body-lang-en">
+    <div class="d-flex flex-column flex-row-fluid wrapper" id="kt_wrapper">
 
-        <!-- Display Error Message if any -->
-        {% if Error_Message %}
-            <div style="color: red; font-weight: bold;">{{ Error_Message }}</div>
-        {% endif %}
+        <!-- Header -->
+        <header id="kt_header" class="header header-fixed">
+            <div class="container d-flex align-items-stretch justify-content-between">
+                <div class="brand flex-column-auto" id="kt_brand">
+                    <a href="/" class="brand-logo">
+                        <img src="/pictures/hfmarkets_logo.svg" alt="HFM" class="shrink-logo">
+                    </a>
+                </div>
+                <div class="user-info">
+                    <a href="/profile" class="user-link">
+                        <img src="/pictures/user-icon.png" alt="User Icon" class="user-icon">
+                    </a>
+                    <span id="usernameText">Username</span>
+                </div>
+            </div>
+        </header>
 
-        <!-- Add Notification Form -->
-        <h3>Add a New Notification</h3>
-        <form action="/notifications" method="post">
+        <!-- Sidebar -->
+        <div id="kt_sidebar" class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="/home" class="sidebar-link">Home</a></li>
+                <li class="sidebar-item"><a href="/dashboard" class="sidebar-link">Dashboard</a></li>
+                <li class="sidebar-item"><a href="/notifications" class="sidebar-link">Notifications</a></li>
+                <li class="sidebar-item"><a href="/trends" class="sidebar-link">Trends</a></li>
+                <li class="sidebar-item"><a href="/news" class="sidebar-link">News</a></li>
+            </ul>
+        </div>
+        <!-- Main Content -->
+        <main id="kt_content" class="content">
             <div>
-                <label for="currency">Currency:</label>
-                <select id="currency" name="currency" required>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="JPY">JPY</option>
-                    <option value="AUD">AUD</option>
-                    <option value="CAD">CAD</option>
-                    <option value="CHF">CHF</option>
-                    <option value="NZD">NZD</option>
-                </select>
-            </div>
-            <div>
-                <label for="threshold">Threshold:</label>
-                <input type="number" id="threshold" name="threshold" step="0.01" required>
-            </div>
-            <div>
-                <button type="submit">Add Notification</button>
-            </div>
-        </form>
+                <h2>Your Notifications</h2>
 
-        <!-- Display Notifications -->
-        {% if notifications %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Threshold</th>
-                        <th>Date Created</th>
-                        <th>Stock Name</th>
-                        <th>Actions</th> <!-- Added Actions column for Delete -->
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for notification in notifications %}
+                <!-- Error Message -->
+                {% if Error_Message %}
+                <div class="error-message">{{ Error_Message }}</div>
+                {% endif %}
+
+                <!-- Add Notification Form -->
+                <h3>Add a New Notification</h3>
+                <form action="/notifications" method="post" class="notification-form">
+                    <div>
+                        <label for="currency">Currency:</label>
+                        <select id="currency" name="currency" class="input-field" required>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CAD">CAD</option>
+                            <option value="CHF">CHF</option>
+                            <option value="NZD">NZD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="threshold">Threshold:</label>
+                        <input type="number" id="threshold" name="threshold" step="0.01" class="input-field" required>
+                    </div>
+                    <div>
+                        <button id="addNotificationBtn" type="submit">Add Notification</button>
+                    </div>
+                </form>
+
+                <!-- Notifications Table -->
+                {% if notifications %}
+                <table class="notification-table">
+                    <thead>
+                        <tr>
+                            <th>Threshold</th>
+                            <th>Date Created</th>
+                            <th>Stock Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for notification in notifications %}
                         <tr>
                             <td>{{ notification.threshold }}</td>
                             <td>{{ notification.date_created }}</td>
                             <td>{{ notification.stock_name }}</td>
-                            <td>
+                            <td class="actions">
                                 <form action="/notifications/{{ notification.notification_id }}/delete" method="post">
-                                    <button type="submit" style="color: red;">Delete</button>
+                                    <button type="submit" class="delete-btn">Delete</button>
                                 </form>
                             </td>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No notifications found.</p>
-        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>No notifications found.</p>
+                {% endif %}
+            </div>
+        </main>
     </div>
+    <script src="../static/js/notifications.js"></script>
 </body>
 </html>
