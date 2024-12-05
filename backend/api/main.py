@@ -480,7 +480,6 @@ async def delete_notification(request: Request, notification_id: int, user_id: i
     finally:
         cursor.close()
         conn.close()
-
 @app.post("/notifications/{notification_id}/delete", response_class=RedirectResponse)
 async def delete_notification(request: Request, notification_id: int, user_id: int = Depends(get_current_user)):
     """Delete a notification from the database."""
@@ -516,8 +515,93 @@ async def delete_notification(request: Request, notification_id: int, user_id: i
         conn.close()
         
 @app.get("/trends", response_class=HTMLResponse)
-async def trends(request: Request, user_id: int = Depends(get_current_user)):
+async def trends(request: Request):
+    """Serve the trends page."""
     return templates.TemplateResponse("trends.html", {"request": request})
+
+@app.post("/trends", response_class=HTMLResponse)
+async def handle_trends_form(request: Request):
+    """Handle POST request from trends page."""
+    form_data = await request.form()
+    action = form_data.get("action")  # Action to determine what button was clicked
+
+    if action == "Get Stock Prediction":
+        stock_name = form_data.get("currency_pair")
+        return await get_stock_prediction(stock_name)
+    elif action == "Get Stock Change":
+        start_date = form_data.get("start_date")
+        end_date = form_data.get("end_date")
+        return await get_stock_change(start_date, end_date)
+    elif action == "Get Most Popular Stock":
+        return await get_most_popular_stock()
+
+    return {"message": "Action not recognized"}
+
+# Endpoint to get stock prediction by name
+async def get_stock_prediction(stock_name: str):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.callproc("GetStockPredictionByName", [stock_name])
+        result = cursor.fetchone()
+
+        if result:
+            return {"prediction": result["prediction"]}
+        else:
+            raise HTTPException(status_code=404, detail="Prediction not found")
+    
+    except Exception as e:
+        logging.error(f"Error in stock prediction: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching stock prediction")
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+# Endpoint to get stock change between two dates
+async def get_stock_change(start_date: str, end_date: str):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.callproc("CalculateStockPercentageChange", [start_date, end_date])
+        result = cursor.fetchall()
+
+        if result:
+            return {"stock_changes": result}
+        else:
+            raise HTTPException(status_code=404, detail="No data found for the given date range")
+
+    except Exception as e:
+        logging.error(f"Error fetching stock change: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching stock change")
+
+    finally:
+        cursor.close()
+        conn.close()
+
+# Endpoint to get most popular stocks
+async def get_most_popular_stock():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.callproc("FindMostPopularStock")
+        result = cursor.fetchall()
+
+        if result:
+            return {"most_popular_stocks": result}
+        else:
+            raise HTTPException(status_code=404, detail="No popular stocks found")
+
+    except Exception as e:
+        logging.error(f"Error fetching most popular stock: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching popular stocks")
+
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.get("/profile", response_class=HTMLResponse)
 async def profile(request: Request, user_id: int = Depends(get_current_user)):
