@@ -510,18 +510,17 @@ def create_all_stored_procedures():
             ORDER BY date DESC
             LIMIT 1; 
 
-            -- Check if the exchange rate is available
-            IF exchange_rate IS NULL THEN
-                SELECT 'Exchange rate not found' AS message, 0.00 AS converted_amount;
-            ELSE
-                SELECT 
-                    CONCAT('The converted amount for ', amount, ' in ', currency_pair, ' is:') AS message,
-                    amount * exchange_rate AS converted_amount;
-            END IF;
-        END
-                    """,
-                    """
-                    CREATE PROCEDURE GetUserNotifications(
+                IF exchange_rate IS NULL THEN
+                    SET result = 0;
+                    SELECT 'Exchange rate not found' AS message;
+                ELSE
+                    SET result = amount * exchange_rate;
+                END IF;
+            END;
+<<<<<<< HEAD
+            """,
+            """ 
+            CREATE PROCEDURE GetUserNotifications(
                         IN p_user_id INT
                     )
                     BEGIN
