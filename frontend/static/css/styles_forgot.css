@@ -15,12 +15,13 @@ body {
     height: 80px; /* Fixed header height */
     display: flex;
     align-items: center;
-    padding: 0 21px;
+    padding: 0 1.5rem; /* Adjusted padding for better scaling */
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     width: 100%; /* Full width */
     position: fixed; /* Sticks the header to the top */
     top: 0;
     left: 0;
+    z-index: 1000; /* Ensure it stays on top */
 }
 
 .brand-logo {
@@ -32,7 +33,6 @@ body {
     height: 50px; /* Adjust the logo size */
 }
 
-
 .header .container {
     display: flex;
     justify-content: center;
@@ -43,7 +43,7 @@ body {
 .wrapper {
     margin: auto; /* Center the login box */
     max-width: 400px; /* Limit the login box width */
-    padding: 25px;
+    padding: 1.5rem;
     box-sizing: border-box;
     margin-top: 140px; /* Push the login box further down */
     display: flex;
@@ -53,54 +53,58 @@ body {
 
 /* Card Styles */
 .card {
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
     background-color: #fff;
+    width: 100%;
 }
 
 .card-header {
-    font-size: 1.5em;
-    margin-bottom: 20px;
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
     text-align: center;
     font-weight: bold;
-    color: #000000;
+    color: #000;
 }
 
 .card-body {
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
     text-align: center;
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 1rem;
+    width: 100%;
+    text-align: left; /* Align labels and inputs to the left */
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 0.5rem;
     font-weight: bold;
+    color: #333;
 }
 
 .form-control {
     width: 100%;
-    padding: 10px;
-    font-size: 1em;
+    padding: 0.625rem;
+    font-size: 1rem;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 0.25rem;
     box-sizing: border-box;
 }
 
 button {
     width: 100%;
-    padding: 10px;
-    font-size: 1em;
+    padding: 0.75rem;
+    font-size: 1rem;
     border: none;
-    border-radius: 4px;
-    background-color:green;
+    border-radius: 0.25rem;
+    background-color: green;
     color: white;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
@@ -109,11 +113,13 @@ button:hover {
 
 .card-footer {
     text-align: center;
+    margin-top: 1rem;
 }
 
 .card-footer a {
     text-decoration: none;
     color: #007bff;
+    font-weight: bold;
 }
 
 .card-footer a:hover {
@@ -125,4 +131,31 @@ button:hover {
     color: green;
     font-weight: bold;
     text-align: center;
+    margin-top: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wrapper {
+        max-width: 90%;
+        margin-top: 100px; /* Adjust spacing for smaller screens */
+    }
+
+    .header {
+        height: 60px; /* Reduce header height */
+        padding: 0 1rem;
+    }
+
+    .brand-logo img {
+        height: 40px; /* Adjust logo size */
+    }
+
+    .card-header {
+        font-size: 1.25rem; /* Reduce font size for smaller screens */
+    }
+
+    button {
+        padding: 0.5rem;
+        font-size: 0.9rem; /* Adjust button size */
+    }
 }

@@ -1,49 +1,69 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: Arial, sans-serif;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f9f9f9;
-  }
-  
-  .container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-  }
-  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9f9f9;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.verification-box {
+  background-color: white;
+  border-radius: 0.5rem; /* Χρησιμοποιούμε rem για τις καμπύλες */
+  padding: 2rem; /* Αναλογία για padding */
+  text-align: center;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+  width: 90%; /* Ευέλικτο πλάτος */
+  max-width: 20rem; /* Μέγιστο πλάτος */
+}
+
+.check-icon {
+  font-size: 3rem; /* Αναλογία για το μέγεθος του εικονιδίου */
+  color: #28a745;
+  margin-bottom: 1.25rem; /* Ευέλικτο margin */
+}
+
+h2 {
+  font-size: 1.5rem; /* Χρησιμοποιούμε rem για τη γραμματοσειρά */
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.625rem;
+}
+
+p {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
   .verification-box {
-    background-color: white;
-    border-radius: 8px;
-    padding: 30px;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 300px;
+      padding: 1.5rem; /* Μικρότερο padding σε μικρότερες οθόνες */
   }
-  
-  .check-icon {
-    font-size: 50px;
-    color: #28a745;
-    margin-bottom: 20px;
-  }
-  
+
   h2 {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 10px;
+      font-size: 1.25rem; /* Προσαρμογή μεγέθους γραμματοσειράς */
   }
-  
+
   p {
-    font-size: 16px;
-    color: #555;
+      font-size: 0.9rem; /* Μικρότερο κείμενο */
   }
-  
+
+  .check-icon {
+      font-size: 2.5rem; /* Μικρότερο εικονίδιο */
+  }
+}

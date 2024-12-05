@@ -94,12 +94,11 @@ def send_email(to_email: str, subject: str, body: str):
         logger.info("Email sent successfully")
     except Exception as e:
         logger.error(f"Error sending email: {e}")
-
-
 def verify_password(plain_password, hashed_password):
     """Verify if the password matches the hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
 
+create_all_stored_procedures()
 
 def hash_password(password: str):
     """Hash a password."""

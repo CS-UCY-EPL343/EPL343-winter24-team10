@@ -20,13 +20,13 @@ body {
 
 .header .brand-logo img {
     max-width: 150px;
-    padding: 15px 30px;
+    padding: 1rem 2rem; /* Χρήση rem */
     height: auto;
 }
 
 .header .login-buttons {
     display: flex;
-    padding: 15px 30px;
+    padding: 1rem 2rem; /* Χρήση rem */
     gap: 10px;
 }
 
@@ -34,7 +34,7 @@ body {
     color: #fff;
     text-decoration: none;
     font-weight: bold;
-    padding: 8px 15px;
+    padding: 0.5rem 1rem; /* Χρήση rem */
     border-radius: 4px;
     transition: background-color 0.3s;
 }
@@ -64,7 +64,6 @@ body {
     flex: 0 0 auto;
     width: 600px;
     height: auto;
-    z-index: 1;
 }
 
 .content {
@@ -75,7 +74,7 @@ body {
 }
 
 .content h1 {
-    font-size: 50px;
+    font-size: 3rem; /* Χρήση rem */
     font-weight: bold;
 }
 
@@ -84,26 +83,26 @@ body {
 }
 
 .content p {
-    font-size: 30px;
+    font-size: 1.5rem; /* Χρήση rem */
     line-height: 1.6;
 }
 
 /* Responsive styles for smaller windows */
 @media (max-width: 868px) {
     .container {
-        display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
-        height: 90vh;
+        text-align: center; /* Κέντρο το περιεχόμενο */
+        margin-top: 80px;
+        gap: 10px;
     }
 
     .header-image {
         width: 100%; /* Full width for the image */
         max-width: 455px; /* Limit max width */
         height: auto;
-        margin-bottom: 30px; /* Add spacing below the image */
+        margin-bottom: 1rem; /* Add spacing below the image */
     }
-
 
     .content {
         margin-right: 0; /* Αφαίρεση του περιθωρίου στις μικρές οθόνες */
@@ -111,10 +110,10 @@ body {
     }
 
     .content h1 {
-        font-size: 40px;
+        font-size: 2rem; /* Μικρότερο font size */
     }
 
     .content p {
-        font-size: 18px;
+        font-size: 1rem;
     }
 }

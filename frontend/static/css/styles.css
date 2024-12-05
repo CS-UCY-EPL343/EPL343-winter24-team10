@@ -21,6 +21,7 @@ body {
     position: fixed; /* Sticks the header to the top */
     top: 0;
     left: 0;
+    z-index: 10; /* Ensures it stays above content */
 }
 
 .brand-logo {
@@ -34,14 +35,14 @@ body {
 
 /* Main Content Wrapper */
 .wrapper {
-    margin: auto; /* Center the login box */
-    max-width: 400px; /* Limit the login box width */
+    margin: auto;
+    max-width: 400px;
     padding: 25px;
     box-sizing: border-box;
-    margin-top: 120px; /* Push the login box further down */
+    margin-top: 120px;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Ensure the login box content is centered */
+    align-items: center;
 }
 
 /* Form Card Styles */
@@ -51,16 +52,22 @@ body {
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     padding: 30px;
-    width: 100%; /* Ensure the card spans full width of the wrapper */
+    width: 100%;
+    transition: box-shadow 0.3s;
+}
+
+.card:hover {
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 .card-header {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 20px;
-    text-align: center; /* Center the title */
+    text-align: center;
 }
 
+/* Form Group */
 .card-body .form-group {
     margin-bottom: 20px;
     text-align: left;
@@ -72,31 +79,41 @@ body {
     margin-bottom: 5px;
 }
 
+/* Input Fields */
 .card-body input[type="email"],
 .card-body input[type="password"] {
-    width: 100%; /* Full width to match button */
+    width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
     box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.card-body input[type="email"]:focus,
+.card-body input[type="password"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
 /* Submit Button */
 button[name="login"] {
-    background-color: green; /* Green button */
+    background-color: green;
     color: white;
     border: none;
     border-radius: 4px;
     padding: 10px;
     cursor: pointer;
     font-size: 16px;
-    width: 100%; /* Match the width of input fields */
+    width: 100%;
     margin-top: 10px;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 button[name="login"]:hover {
-    background-color: green;
+    background-color: darkgreen;
+    transform: scale(1.03);
 }
 
 /* Footer Link */
@@ -109,68 +126,59 @@ button[name="login"]:hover {
     color: #007bff;
     text-decoration: none;
     font-weight: bold;
+    transition: color 0.3s;
 }
 
 .card-footer a:hover {
+    color: #0056b3;
     text-decoration: underline;
 }
 
-label {
-    position: relative;
-}
-
-label a {
-    position: absolute;
-    right: 0; /* Move it to the far-right of the container */
-    font-size: 12px; /* Smaller font size */
-    text-decoration: none; /* No underline */
-    color: red; /* Red color */
-}
-
-/* Hover effect: underline when the mouse hovers over the link */
-label a:hover {
-    text-decoration: underline; /* Underline when hovered */
-}
-
-/* Ensure the email and password fields have the same width and padding */
-.form-control {
-    width: 100%;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-/* Add extra padding to the password field for the eye icon */
-/* Updated password container and eye icon styles */
+/* Password Container */
 .password-container {
     position: relative;
-    max-width: 100%; /* Ensures it does not exceed the parent container */
 }
 
 .password-container input {
-    padding-right: 40px; /* Space for the eye icon */
-    width: 100%; /* Ensure input spans full width */
-    box-sizing: border-box; /* Prevent size overflow due to padding */
+    padding-right: 40px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .eye-icon {
     position: absolute;
-    right: 10px; /* Positioning the eye icon inside the input field */
-    top: 50%; /* Vertically align the icon */
+    right: 10px;
+    top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px; /* Set fixed dimensions */
+    width: 20px;
     height: 20px;
+    color: #666;
+    transition: color 0.3s;
 }
 
+.eye-icon:hover {
+    color: #333;
+}
 
-/* Remove outline from buttons and focus */
-input:focus {
-    outline: none;
-    border: 1px solid #007bff;
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 20px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .card-header {
+        font-size: 16px;
+    }
+
+    button[name="login"] {
+        font-size: 14px;
+    }
 }

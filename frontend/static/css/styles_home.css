@@ -12,64 +12,56 @@ body {
 .user-info {
     display: flex;
     align-items: center;
-    color: white; /* White text for the username */
+    color: white;
     position: absolute;
     top: 50%;
-    right: 60px;
-    transform: translateY(-50%); /* Vertically center the user info */
+    right: 3%; /* Χρήση ποσοστού για ευελιξία */
+    transform: translateY(-50%);
 }
 
-/* User Icon */
 .user-info .user-icon {
-    width: 30px; /* Adjust the icon size */
-    height: 30px;
-    border-radius: 50%; /* Makes the icon round */
-    margin-right: 10px; /* Space between icon and username */
+    width: 2rem; /* Αναλογία για το μέγεθος του icon */
+    height: 2rem;
+    border-radius: 50%;
+    margin-right: 0.5rem;
 }
 
-/* Username Text */
 #usernameText {
-    font-size: 16px; /* Adjust the font size */
-    font-weight: bold; /* Makes the username text bold */
-    white-space: nowrap; /* Prevents the text from wrapping */
-    overflow: hidden; /* Ensures the text doesn't overflow */
-    text-overflow: ellipsis; /* Adds ellipsis if the text is too long */
+    font-size: 1rem;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Header Styles */
 #kt_header {
-    background-color: black; /* Black background */
-    color: white; /* Text in the header */
-    height: 80px; /* Fixed header height */
+    background-color: black;
+    color: white;
+    height: 10vh; /* Αντί για pixels, viewport height */
     display: flex;
     align-items: center;
-    padding: 0 21px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    width: 100%; /* Full width */
-    position: fixed; /* Sticks the header to the top */
+    padding: 0 5%; /* Ευέλικτο padding */
+    box-shadow: 0 0.5rem 0.75rem rgba(0, 0, 0, 0.1);
+    width: 100%;
+    position: fixed;
     top: 0;
     left: 0;
 }
 
-
-.brand-logo {
-    display: flex;
-    align-items: center;
-}
-
 .brand-logo img {
-    height: 50px; /* Adjust the logo size */
+    height: 3rem; /* Ευέλικτο μέγεθος logo */
 }
 
 #kt_sidebar {
     background-color: black;
     color: white;
-    width: 200px;
-    height: 100%;
+    width: 15%; /* Χρήση ποσοστού για το πλάτος */
+    height: calc(100vh - 10vh); /* Υπολογισμός για να αποφεύγεται η επικαλυψη με το header */
     position: fixed;
-    top: 80px; /* Below the header */
+    top: 10vh;
     left: 0;
-    padding-top: 20px;
+    padding-top: 2rem;
 }
 
 .sidebar-menu {
@@ -79,7 +71,7 @@ body {
 }
 
 .sidebar-item {
-    margin: 15px 0;
+    margin: 1rem 0;
 }
 
 .sidebar-item:nth-child(1) .sidebar-link {
@@ -91,8 +83,8 @@ body {
 .sidebar-link {
     color: white;
     text-decoration: none;
-    font-size: 18px;
-    padding-left: 20px;
+    font-size: 1rem;
+    padding-left: 1rem;
     display: block;
 }
 
@@ -102,7 +94,7 @@ body {
 
 /* General styles */
 .content {
-    margin-top: 80px; /* Push content below the fixed header */
+    margin-top: 10vh; /* Ευθυγράμμιση κάτω από το header */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -111,14 +103,14 @@ body {
 }
 
 .cont {
-    margin-top: 300px; /* Space below the image */
-    padding: 20px;
+    margin-top: 5rem; /* Αρκετό διάστημα από πάνω */
+    padding: 2rem;
     margin-bottom: auto;
-    margin-left: 165px;
+    margin-left: 17%;
 }
 
 .cont h1 {
-    font-size: 36px;
+    font-size: 2.25rem;
     font-weight: bold;
 }
 
@@ -127,31 +119,32 @@ body {
 }
 
 .cont p {
-    font-size: 18px;
+    font-size: 1.125rem;
     line-height: 1.6;
 }
 
-.cont footer{
-    margin-top:1000px;
+.cont footer {
+    margin-top: 50vh; /* Αρκετό διάστημα μέχρι το footer */
 }
 
 /* Responsive adjustments for smaller screens */
-@media (max-width: 1868px) {
+@media (max-width: 768px) {
     .header-image {
-        width: 100%; /* Ensure full width on smaller screens */
-        max-width: 100%; /* Remove maximum width */
-        margin-top: 0; /* Avoid overlap */
+        width: 100%; /* Ευθυγράμμιση πλήρους πλάτους */
+        max-width: 100%;
+        margin-top: 0;
     }
 
     .cont {
-        padding: 10px;
+        padding: 1rem;
+        margin-left: 0; /* Κεντράρισμα για μικρές οθόνες */
     }
 
     .cont h1 {
-        font-size: 28px;
+        font-size: 1.75rem;
     }
 
     .cont p {
-        font-size: 16px;
+        font-size: 1rem;
     }
 }

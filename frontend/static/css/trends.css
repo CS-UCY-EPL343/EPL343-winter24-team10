@@ -1,13 +1,3 @@
-body {
-    background-color: whitesmoke;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
 /* Header Styles */
 #kt_header {
     background-color: black;
@@ -25,13 +15,12 @@ body {
 }
 
 .brand-logo img {
-    margin-left: -20px;
     height: 50px;
 }
 
-/* Style for User Icon and Username */
+/* User Icon */
 .user-info {
-    display: flex; 
+    display: flex;
     align-items: center;
     color: white;
     position: absolute;
@@ -61,11 +50,6 @@ body {
 .sidebar-item {
     margin: 15px 0;
 }
-.sidebar-item:nth-child(4) .sidebar-link {
-    background-color: rgb(165, 1, 1); /* Blue background for active item */
-    color: white; /* White text */
-    font-weight: bold; /* Bold text */
-}
 
 .sidebar-link {
     color: white;
@@ -75,13 +59,33 @@ body {
     display: block;
 }
 
-/* Content Area */
-.container {
-    margin-top: 20px;
-    padding: 70px;
+.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.3s;
 }
 
-/* Button Styles */
+/* Active link */
+.sidebar-item:nth-child(4) .sidebar-link {
+    background-color: rgb(165, 1, 1);
+    color: white;
+    font-weight: bold;
+}
+
+/* Content Area */
+.container {
+    margin: 0 auto;
+    padding: 70px;
+    width: 80%;
+    text-align: center;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
 .show-button {
     background-color: green;
     color: white;
@@ -90,26 +94,49 @@ body {
     border-radius: 5px;
     cursor: pointer;
     margin-top: 20px;
+    transition: background-color 0.3s ease;
 }
 
 .show-button:hover {
     background-color: darkgreen;
 }
 
-/* Hide the sections initially */
+/* Hidden Sections */
 .hidden {
     display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
 }
 
-/* Year Range Section */
-.year-range-selector {
-    margin-top: 20px;
+.hidden.show {
+    display: block;
+    opacity: 1;
 }
 
+/* Year Range */
 .year-range-selector input {
     padding: 10px;
     margin: 10px;
     width: 100px;
     border-radius: 5px;
     border: 1px solid #ccc;
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #kt_sidebar {
+        width: 100px;
+    }
+    .sidebar-link {
+        font-size: 14px;
+        padding-left: 10px;
+    }
+    .container {
+        width: 90%;
+        padding: 20px;
+    }
+    .user-info {
+        right: 20px;
+    }
 }
