@@ -61,8 +61,10 @@
                         <div class="article-row">
                             <div class="article-image-container">
                                 {% if article.url_to_image %}
-                                    <img src="{{ article.url_to_image }}" alt="{{ article.title }}" class="article-image">
-                                {% endif %}
+                                <img src="{{ article.url_to_image }}" alt="{{ article.title }}" class="article-image">
+                                {% else %}
+                                    <p>No image available</p>
+                                {% endif %}                            
                             </div>
                             <div class="article-details">
                                 <a href="{{ article.url }}" target="_blank" class="article-title">

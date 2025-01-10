@@ -132,7 +132,7 @@ async def read_root(request: Request):
 
 
 @app.post("/register")
-async def register_user(request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)):
+async def register_user(request: Request, name: str = Form(...), surname: str = Form(...),email: str = Form(...), password: str = Form(...)):
     """Register a new user and send email verification."""
     try:
         valid = validate_email(email)
@@ -140,16 +140,15 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
     except EmailNotValidError as e:
         return {"Error_Message": f"Invalid email format: {str(e)}"}
     
-    # Hash the password
     hashed_password = hash_password(password)
     
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute("""
-            INSERT INTO USER (email, password, username, lvl, registration_date)
-            VALUES (%s, %s, %s, 0, NOW())
-        """, (email, hashed_password, name))
+            INSERT INTO USER (email, password, username, registration_date, lastname, name)
+            VALUES (%s, %s, %s, NOW(), %s, %s)
+        """, (email, hashed_password, email.split('@')[0], surname, name)) 
         conn.commit()
         
         verification_token = create_email_verification_token(email)
@@ -160,7 +159,7 @@ async def register_user(request: Request, name: str = Form(...), email: str = Fo
             name=name,
             verification_link=verification_link
         )
-        # Send the email
+
         send_email(email, "Email Verification", email_body)
         
         return RedirectResponse(url="/login", status_code=303)
@@ -212,15 +211,12 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
         if result:
             stored_password, user_id, last_logged_in = result
             if verify_password(password, stored_password):
-                # Update last_logged_in field with current timestamp
                 current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 cursor.execute("UPDATE USER SET last_logged_in = %s WHERE user_id = %s", (current_time, user_id))
-                conn.commit()  # Commit the update
+                conn.commit()  
                 
-                # Generate access token
                 access_token = create_access_token(data={"sub": str(user_id)}, expires_delta=timedelta(minutes=30))
                 
-                # Redirect and set access token in cookie
                 response = RedirectResponse(url="/home", status_code=303)
                 response.set_cookie("access_token", access_token, httponly=True, secure=True, max_age=1800)
                 return response
@@ -232,6 +228,22 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
         cursor.close()
         conn.close()
 
+@app.get("/home", response_class=HTMLResponse)
+async def home(request: Request, user_id: int = Depends(get_current_user)):
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT username
+    FROM USER WHERE user_id = %s""", (user_id,))
+    result = cursor.fetchone()
+    username = result[0] if result else "Guest"
+
+    cursor.close()
+    conn.close()
+    
+    return templates.TemplateResponse("home.html", {"request": request, "username":username})
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, user_id: int = Depends(get_current_user)):
@@ -301,6 +313,7 @@ async def forgot_password_post(request: Request, password: str = Form(...), pass
     if password != password1:
         return templates.TemplateResponse("new_password.html", {"request": request, "Error_Message": "Passwords do not match."})
     return templates.TemplateResponse("password_changed.html", {"request": request})
+
 @app.post("/fill_database", response_class=HTMLResponse)
 async def fill_database(request: Request):
     """Fill the database with data from Alpha Vantage API."""
@@ -363,13 +376,16 @@ def save_articles_to_db(articles):
         description = article['description']
         content = article['content']
         url = article['url']
-        published_at = article['publishedAt']
-
+        urlToImage = article['urlToImage']
+        
+        published_at_str = article['publishedAt']
+        published_at = datetime.strptime(published_at_str, "%Y-%m-%dT%H:%M:%SZ")
+        
         try:
             cursor.execute("""
-                INSERT INTO NEWS (title, description, content, url, published_at)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (title, description, content, url, published_at))
+                INSERT INTO news_articles (title, description, content, url, published_at, url_to_image)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (title, description, content, url, published_at, urlToImage))  
             conn.commit()
         except Exception as e:
             logger.error(f"Error saving article: {e}")
@@ -377,15 +393,17 @@ def save_articles_to_db(articles):
     cursor.close()
     conn.close()
 
+
 @app.get("/fetch_news", response_class=HTMLResponse)
 async def fetch_news(request: Request):
-    url = f"https://newsapi.org/v2/everything?q=currency&apiKey={NEWS_API_KEY}"
+    url = f"https://newsapi.org/v2/everything?q=AUD&apiKey={NEWS_API_KEY}"
+    logging.error(url)
     response = requests.get(url)
     news = response.json()
     if news['status'] == 'ok':
         articles = news['articles']
         save_articles_to_db(articles)
-    return templates.TemplateResponse("news.html", {"request": request, "articles": articles})
+    # return templates.TemplateResponse("news.html", {"request": request, "articles": articles, "currency": "USD"})
 
 @app.get("/news", response_class=HTMLResponse)
 async def news(request: Request, currency: str = "USD", user_id: int = Depends(get_current_user)):
@@ -624,7 +642,6 @@ async def get_stock_prediction(stock_name: str):
         cursor.close()
         conn.close()
 
-# Endpoint to get stock change between two dates
 async def get_stock_change(start_date: str, end_date: str):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -646,7 +663,6 @@ async def get_stock_change(start_date: str, end_date: str):
         cursor.close()
         conn.close()
 
-# Endpoint to get most popular stocks
 async def get_most_popular_stock():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -742,24 +758,6 @@ async def change_password(request: Request,
         cursor.close()
         conn.close()
 
-
-@app.get("/home", response_class=HTMLResponse)
-async def home(request: Request, user_id: int = Depends(get_current_user)):
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT username
-    FROM USER WHERE user_id = %s""", (user_id,))
-    result = cursor.fetchone()
-    username = result[0] if result else "Guest"
-
-    cursor.close()
-    conn.close()
-    
-    return templates.TemplateResponse("home.html", {"request": request, "username":username})
-
 @app.get("/converter", response_class=HTMLResponse)
 async def converter(request: Request, user_id: int = Depends(get_current_user)):
     
@@ -770,7 +768,7 @@ async def converter(request: Request, user_id: int = Depends(get_current_user)):
     SELECT username
     FROM USER WHERE user_id = %s""", (user_id,))
     result = cursor.fetchone()
-    username = result[0] if result else "Guest"
+    username = result[0]
 
     cursor.close()
     conn.close()
