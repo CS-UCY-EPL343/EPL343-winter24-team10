@@ -68,17 +68,14 @@ body {
     background-color: #444;
 }
 
-/* Wrapper for Content */
 .wrapper {  
-    margin-left: 220px; /* Space for the sidebar */
-    padding: 25px;
-    margin-top: 120px; /* Space for fixed header */
+    margin-left: 220px; 
+    margin-top: 120px; 
     flex: 1;
 }
 
-/* Form Styles */
 form {
-    width:100%;
+    width:30%;
     max-width: 1200px;
     background-color:black;
     padding: 25px;

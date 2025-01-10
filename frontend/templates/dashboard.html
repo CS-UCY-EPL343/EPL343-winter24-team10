@@ -40,12 +40,15 @@
             <li class="sidebar-item"><a href="/converter" class="sidebar-link">Currency Converter</a></li>
         </ul>
     </div>
-
-    <!-- Main Content -->
+    
     <div class="wrapper">
         <h1>Forex Dashboard</h1>
-        <!-- Currency Selection Form -->
-        <form method="post" action="/dashboard">
+        <style>
+            .form{
+                width:30%;
+            }
+        </style>
+        <form method="post" action="/dashboard" class="form">
             <label for="currency2">Target Currency:</label>
             <select id="currency2" name="currency2" required>
                 <option value="EUR">EUR</option>
